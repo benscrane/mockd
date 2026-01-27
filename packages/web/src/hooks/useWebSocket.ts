@@ -29,11 +29,10 @@ const PING_INTERVAL = 30000;
 const MIN_RECONNECT_DELAY = 1000;
 const MAX_RECONNECT_DELAY = 30000;
 
-function getWebSocketUrl(subdomain?: string): string {
+function getWebSocketUrl(doName: string): string {
   const baseWsUrl = getEndpointWebSocketUrl();
-  const resolvedSubdomain = subdomain || window.location.hostname.split('.')[0];
-  // Use path-based routing: /m/{projectId}
-  return `${baseWsUrl}/m/${resolvedSubdomain}`;
+  // Use path-based routing: /m/{doName}
+  return `${baseWsUrl}/m/${doName}`;
 }
 
 export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketReturn {
@@ -128,6 +127,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
   }, []);
 
   const connect = useCallback(() => {
+    // Don't connect without a valid subdomain/doName
+    if (!subdomain) {
+      return;
+    }
+
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       return;
     }

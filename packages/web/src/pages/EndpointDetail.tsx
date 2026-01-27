@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import type { Project, Endpoint } from '@relay/shared';
 import { useProjects, useEndpoints, useWebSocket } from '../hooks';
@@ -17,9 +17,12 @@ export function EndpointDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Connect to WebSocket with project's subdomain (reconnects when subdomain/endpointId changes)
+  // Get the DO name for WebSocket connection (subdomain for user-owned, id for anonymous)
+  const doName = useMemo(() => project ? getProjectDoName(project) : undefined, [project]);
+
+  // Connect to WebSocket with project's DO name (reconnects when doName/endpointId changes)
   const { status, requests, clearRequests } = useWebSocket({
-    subdomain: project?.subdomain,
+    subdomain: doName,
     endpointId: endpointId,
   });
 

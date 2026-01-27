@@ -1,5 +1,10 @@
 // Centralized configuration for URLs
 
+/** Strip trailing slashes from URLs */
+function stripTrailingSlash(url: string): string {
+  return url.replace(/\/+$/, '');
+}
+
 /**
  * Get the base URL for the API worker
  */
@@ -7,7 +12,7 @@ export function getApiBaseUrl(): string {
   if (import.meta.env.DEV) {
     return 'http://localhost:8787';
   }
-  return import.meta.env.VITE_API_URL || '';
+  return stripTrailingSlash(import.meta.env.VITE_API_URL || '');
 }
 
 /**
@@ -19,7 +24,7 @@ export function getEndpointBaseUrl(): string {
   if (import.meta.env.DEV) {
     return 'http://localhost:8788';
   }
-  return import.meta.env.VITE_ENDPOINT_URL || '';
+  return stripTrailingSlash(import.meta.env.VITE_ENDPOINT_URL || '');
 }
 
 /**
@@ -30,7 +35,7 @@ export function getEndpointWebSocketUrl(): string {
     return 'ws://localhost:8788';
   }
   // Convert http(s) to ws(s)
-  const httpUrl = import.meta.env.VITE_ENDPOINT_URL || '';
+  const httpUrl = stripTrailingSlash(import.meta.env.VITE_ENDPOINT_URL || '');
   return httpUrl.replace(/^http/, 'ws');
 }
 
