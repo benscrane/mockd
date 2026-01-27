@@ -25,9 +25,9 @@ script_name = "relay-endpoint"
 vars = { ENVIRONMENT = "production" }
 
 [[env.production.d1_databases]]
-binding = "DB"
+binding = "relay_db"
 database_name = "relay-db"
-database_id = "YOUR_PRODUCTION_DATABASE_ID"
+database_id = "19945fb7-10cb-4894-bac3-d124d9981347"
 
 [[env.production.durable_objects.bindings]]
 name = "ENDPOINT_DO"
