@@ -32,4 +32,4 @@ database_id = "19945fb7-10cb-4894-bac3-d124d9981347"
 [[env.production.durable_objects.bindings]]
 name = "ENDPOINT_DO"
 class_name = "EndpointDO"
-script_name = "relay-endpoint"
+script_name = "relay-endpoint-production"
