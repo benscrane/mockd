@@ -22,10 +22,10 @@ export function CopyButton({ text, label = 'Copy', className = '' }: CopyButtonP
   return (
     <button
       onClick={handleCopy}
-      className={`px-3 py-1 text-sm rounded border transition-colors ${
+      className={`btn btn-sm ${
         copied
-          ? 'bg-green-50 border-green-300 text-green-700'
-          : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+          ? 'btn-success'
+          : 'btn-outline'
       } ${className}`}
     >
       {copied ? 'Copied!' : label}

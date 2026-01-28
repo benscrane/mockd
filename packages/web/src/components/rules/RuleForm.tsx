@@ -105,64 +105,66 @@ export function RuleForm({ rule, onSubmit, onCancel }: RuleFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Rule Name
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text">Rule Name</span>
         </label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g., Return user by ID"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+          className="input input-bordered w-full"
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Priority
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text">Priority</span>
           </label>
           <input
             type="number"
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+            className="input input-bordered w-full"
           />
           {errors.priority && (
-            <p className="text-red-500 text-sm mt-1">{errors.priority}</p>
+            <p className="text-error text-sm mt-1">{errors.priority}</p>
           )}
-          <p className="text-xs text-gray-500 mt-1">Higher priority rules are matched first</p>
+          <label className="label">
+            <span className="label-text-alt text-base-content/70">Higher priority rules are matched first</span>
+          </label>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Active
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text">Active</span>
           </label>
-          <label className="flex items-center gap-2 mt-2">
+          <label className="flex items-center gap-2 mt-2 cursor-pointer">
             <input
               type="checkbox"
               checked={isActive}
               onChange={(e) => setIsActive(e.target.checked)}
-              className="w-4 h-4 text-blue-600 rounded-sm focus:ring-blue-500"
+              className="checkbox checkbox-primary"
             />
-            <span className="text-sm text-gray-600">Rule is active</span>
+            <span className="text-sm text-base-content/70">Rule is active</span>
           </label>
         </div>
       </div>
 
-      <div className="border-t pt-4">
-        <h4 className="font-medium text-gray-800 mb-3">Match Conditions</h4>
+      <div className="border-t border-base-200 pt-4">
+        <h4 className="font-medium text-base-content mb-3">Match Conditions</h4>
 
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              HTTP Method
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">HTTP Method</span>
             </label>
             <select
               value={matchMethod}
               onChange={(e) => setMatchMethod(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+              className="select select-bordered w-full"
             >
               <option value="">Any method</option>
               {HTTP_METHODS.map((m) => (
@@ -171,127 +173,131 @@ export function RuleForm({ rule, onSubmit, onCancel }: RuleFormProps) {
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Path Pattern
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Path Pattern</span>
             </label>
             <input
               type="text"
               value={matchPath}
               onChange={(e) => setMatchPath(e.target.value)}
               placeholder="e.g., /users/:id"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+              className="input input-bordered w-full"
             />
-            <p className="text-xs text-gray-500 mt-1">Use :paramName for path parameters</p>
+            <label className="label">
+              <span className="label-text-alt text-base-content/70">Use :paramName for path parameters</span>
+            </label>
           </div>
         </div>
 
-        <div className="mt-3">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Match Headers (JSON)
+        <div className="form-control mt-3">
+          <label className="label">
+            <span className="label-text">Match Headers (JSON)</span>
           </label>
           <textarea
             value={matchHeaders}
             onChange={(e) => setMatchHeaders(e.target.value)}
             placeholder='{"Content-Type": "application/json"}'
             rows={2}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+            className="textarea textarea-bordered w-full font-mono text-sm"
           />
           {errors.matchHeaders && (
-            <p className="text-red-500 text-sm mt-1">{errors.matchHeaders}</p>
+            <p className="text-error text-sm mt-1">{errors.matchHeaders}</p>
           )}
         </div>
       </div>
 
-      <div className="border-t pt-4">
-        <h4 className="font-medium text-gray-800 mb-3">Response Configuration</h4>
+      <div className="border-t border-base-200 pt-4">
+        <h4 className="font-medium text-base-content mb-3">Response Configuration</h4>
 
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Status Code
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Status Code</span>
             </label>
             <input
               type="number"
               value={responseStatus}
               onChange={(e) => setResponseStatus(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+              className="input input-bordered w-full"
             />
             {errors.responseStatus && (
-              <p className="text-red-500 text-sm mt-1">{errors.responseStatus}</p>
+              <p className="text-error text-sm mt-1">{errors.responseStatus}</p>
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Delay (ms)
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">Delay (ms)</span>
             </label>
             <input
               type="number"
               value={responseDelayMs}
               onChange={(e) => setResponseDelayMs(e.target.value)}
               min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+              className="input input-bordered w-full"
             />
             {errors.responseDelayMs && (
-              <p className="text-red-500 text-sm mt-1">{errors.responseDelayMs}</p>
+              <p className="text-error text-sm mt-1">{errors.responseDelayMs}</p>
             )}
           </div>
         </div>
 
-        <div className="mt-3">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Response Body (JSON)
+        <div className="form-control mt-3">
+          <label className="label">
+            <span className="label-text">Response Body (JSON)</span>
           </label>
           <textarea
             value={responseBody}
             onChange={(e) => setResponseBody(e.target.value)}
             rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+            className="textarea textarea-bordered w-full font-mono text-sm"
           />
           {errors.responseBody && (
-            <p className="text-red-500 text-sm mt-1">{errors.responseBody}</p>
+            <p className="text-error text-sm mt-1">{errors.responseBody}</p>
           )}
-          <p className="text-xs text-gray-500 mt-1">
-            Use {"{{paramName}}"} to interpolate path parameters
-          </p>
+          <label className="label">
+            <span className="label-text-alt text-base-content/70">
+              Use {"{{paramName}}"} to interpolate path parameters
+            </span>
+          </label>
         </div>
 
-        <div className="mt-3">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Response Headers (JSON)
+        <div className="form-control mt-3">
+          <label className="label">
+            <span className="label-text">Response Headers (JSON)</span>
           </label>
           <textarea
             value={responseHeaders}
             onChange={(e) => setResponseHeaders(e.target.value)}
             placeholder='{"X-Custom-Header": "value"}'
             rows={2}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+            className="textarea textarea-bordered w-full font-mono text-sm"
           />
           {errors.responseHeaders && (
-            <p className="text-red-500 text-sm mt-1">{errors.responseHeaders}</p>
+            <p className="text-error text-sm mt-1">{errors.responseHeaders}</p>
           )}
         </div>
       </div>
 
       {errors.submit && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-sm">
+        <div className="alert alert-error">
           {errors.submit}
         </div>
       )}
 
-      <div className="flex justify-end gap-3 pt-4 border-t">
+      <div className="flex justify-end gap-3 pt-4 border-t border-base-200">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+          className="btn btn-ghost"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={submitting}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="btn btn-primary"
         >
           {submitting ? 'Saving...' : rule ? 'Update Rule' : 'Create Rule'}
         </button>

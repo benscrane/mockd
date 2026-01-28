@@ -34,24 +34,24 @@ export function RequestItem({ request }: RequestItemProps) {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="border-b border-gray-200 last:border-b-0">
+    <div className="border-b border-base-200 last:border-b-0">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full px-4 py-3 flex items-center gap-4 hover:bg-gray-50 transition-colors text-left"
+        className="w-full px-4 py-3 flex items-center gap-4 hover:bg-base-200 transition-colors text-left"
       >
-        <span className="text-gray-400 text-sm">
+        <span className="text-base-content/50 text-sm">
           {expanded ? '▼' : '▶'}
         </span>
         <MethodBadge method={request.method} />
-        <span className="flex-1 font-mono text-sm text-gray-800 truncate">
+        <span className="flex-1 font-mono text-sm text-base-content truncate">
           {request.path}
         </span>
         {(request.matched_rule_name || request.matched_rule_id) && (
-          <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 rounded-sm">
+          <span className="badge badge-secondary">
             {request.matched_rule_name || 'Rule'}
           </span>
         )}
-        <span className="text-xs text-gray-400">
+        <span className="text-xs text-base-content/50">
           {formatTimestamp(request.timestamp)}
         </span>
       </button>

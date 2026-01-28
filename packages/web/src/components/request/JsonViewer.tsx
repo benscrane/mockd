@@ -127,11 +127,11 @@ export function JsonViewer({ data }: JsonViewerProps) {
   }, [data]);
 
   if (!tokens) {
-    return <span className="text-gray-400 italic">No data</span>;
+    return <span className="text-base-content/50 italic">No data</span>;
   }
 
   return (
-    <pre className="text-sm font-mono bg-gray-50 p-3 rounded-sm overflow-x-auto whitespace-pre-wrap wrap-break-word">
+    <pre className="text-sm font-mono bg-base-200 p-3 rounded-sm overflow-x-auto whitespace-pre-wrap wrap-break-word">
       {tokens.map((token, index) => {
         const className = tokenColors[token.type];
         return className ? (

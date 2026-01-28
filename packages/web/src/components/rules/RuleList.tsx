@@ -14,7 +14,7 @@ export function RuleList({ rules, onEdit, onDelete, onToggleActive }: RuleListPr
 
   if (sortedRules.length === 0) {
     return (
-      <div className="text-center py-12 text-gray-400">
+      <div className="text-center py-12 text-base-content/50">
         <p className="mb-2">No rules configured</p>
         <p className="text-sm">
           Create a rule to customize responses based on request matching
@@ -24,7 +24,7 @@ export function RuleList({ rules, onEdit, onDelete, onToggleActive }: RuleListPr
   }
 
   return (
-    <div className="divide-y divide-gray-200">
+    <div className="divide-y divide-base-200">
       {sortedRules.map((rule) => (
         <div
           key={rule.id}
@@ -32,42 +32,42 @@ export function RuleList({ rules, onEdit, onDelete, onToggleActive }: RuleListPr
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-xs text-gray-400 w-8">#{rule.priority}</span>
+              <span className="badge badge-ghost text-xs w-8">#{rule.priority}</span>
               {rule.matchMethod && (
                 <MethodBadge method={rule.matchMethod} />
               )}
               {!rule.matchMethod && (
-                <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-sm">
+                <span className="badge badge-ghost">
                   ANY
                 </span>
               )}
-              <span className="font-mono text-sm text-gray-800">
+              <span className="font-mono text-sm text-base-content">
                 {rule.matchPath || '*'}
               </span>
               {rule.name && (
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-base-content/70">
                   {rule.name}
                 </span>
               )}
             </div>
 
             <div className="flex items-center gap-2">
-              <span className={`text-xs px-2 py-1 rounded ${
+              <span className={`badge ${
                 rule.responseStatus >= 200 && rule.responseStatus < 300
-                  ? 'bg-green-100 text-green-700'
+                  ? 'badge-success'
                   : rule.responseStatus >= 400
-                    ? 'bg-red-100 text-red-700'
-                    : 'bg-gray-100 text-gray-700'
+                    ? 'badge-error'
+                    : 'badge-ghost'
               }`}>
                 {rule.responseStatus}
               </span>
 
               <button
                 onClick={() => onToggleActive(rule)}
-                className={`p-1 rounded transition-colors ${
+                className={`btn btn-ghost btn-xs ${
                   rule.isActive
-                    ? 'text-green-600 hover:bg-green-50'
-                    : 'text-gray-400 hover:bg-gray-100'
+                    ? 'text-success'
+                    : 'text-base-content/50'
                 }`}
                 title={rule.isActive ? 'Disable rule' : 'Enable rule'}
               >
@@ -84,7 +84,7 @@ export function RuleList({ rules, onEdit, onDelete, onToggleActive }: RuleListPr
 
               <button
                 onClick={() => onEdit(rule)}
-                className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-sm transition-colors"
+                className="btn btn-ghost btn-xs"
                 title="Edit rule"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -94,7 +94,7 @@ export function RuleList({ rules, onEdit, onDelete, onToggleActive }: RuleListPr
 
               <button
                 onClick={() => onDelete(rule.id)}
-                className="p-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-sm transition-colors"
+                className="btn btn-ghost btn-xs text-error"
                 title="Delete rule"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,7 +105,7 @@ export function RuleList({ rules, onEdit, onDelete, onToggleActive }: RuleListPr
           </div>
 
           {rule.responseDelayMs > 0 && (
-            <div className="mt-1 ml-11 text-xs text-gray-400">
+            <div className="mt-1 ml-11 text-xs text-base-content/50">
               Delay: {rule.responseDelayMs}ms
             </div>
           )}

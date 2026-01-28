@@ -7,7 +7,7 @@ import { getApiBaseUrl } from '../config';
 export function Home() {
   const navigate = useNavigate();
   const { user, logout, loading: authLoading } = useAuth();
-  const { projects, loading, error, fetchProjects, createProject, createAnonymousProject, deleteProject } = useProjects();
+  const { projects, loading, error, fetchProjects, createProject, createAnonymousProject, deleteProject, clearProjects } = useProjects();
   const [showForm, setShowForm] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [endpointCounts, setEndpointCounts] = useState<Record<string, number>>({});
@@ -38,6 +38,13 @@ export function Home() {
   useEffect(() => {
     fetchProjects();
   }, [fetchProjects]);
+
+  // Clear projects when user logs out
+  useEffect(() => {
+    if (!user && !authLoading) {
+      clearProjects();
+    }
+  }, [user, authLoading, clearProjects]);
 
   // Fetch endpoint counts when projects change
   useEffect(() => {
@@ -124,7 +131,7 @@ export function Home() {
         </dialog>
 
         {error && (
-          <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-md text-red-600">
+          <div className="alert alert-error mb-8">
             {error}
           </div>
         )}

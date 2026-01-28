@@ -54,14 +54,14 @@ export function ProjectForm({ onSubmit, onCancel, isLoading }: ProjectFormProps)
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-600">
+        <div className="alert alert-error text-sm">
           {error}
         </div>
       )}
 
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-          Project Name
+      <div className="form-control">
+        <label htmlFor="name" className="label">
+          <span className="label-text">Project Name</span>
         </label>
         <input
           type="text"
@@ -69,17 +69,17 @@ export function ProjectForm({ onSubmit, onCancel, isLoading }: ProjectFormProps)
           value={name}
           onChange={(e) => handleNameChange(e.target.value)}
           placeholder="My API Project"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-xs focus:ring-blue-500 focus:border-blue-500"
+          className="input input-bordered w-full"
           disabled={isLoading}
         />
       </div>
 
-      <div>
-        <label htmlFor="subdomain" className="block text-sm font-medium text-gray-700 mb-1">
-          Identifier
+      <div className="form-control">
+        <label htmlFor="subdomain" className="label">
+          <span className="label-text">Identifier</span>
         </label>
-        <div className="flex items-center">
-          <span className="px-3 py-2 bg-gray-100 border border-r-0 border-gray-300 rounded-l-md text-gray-500 text-sm truncate max-w-[200px]">
+        <div className="join w-full">
+          <span className="join-item px-3 py-2 bg-base-200 border border-base-300 text-base-content/70 text-sm truncate max-w-[200px] flex items-center">
             {endpointDisplay}
           </span>
           <input
@@ -88,27 +88,29 @@ export function ProjectForm({ onSubmit, onCancel, isLoading }: ProjectFormProps)
             value={subdomain}
             onChange={(e) => setSubdomain(e.target.value.toLowerCase())}
             placeholder="my-api"
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-r-md shadow-xs focus:ring-blue-500 focus:border-blue-500"
+            className="input input-bordered join-item flex-1"
             disabled={isLoading}
           />
         </div>
-        <p className="mt-1 text-xs text-gray-500">
-          Your mock endpoint URL will be: {endpointBase}/m/{subdomain || 'your-identifier'}
-        </p>
+        <label className="label">
+          <span className="label-text-alt text-base-content/70">
+            Your mock endpoint URL will be: {endpointBase}/m/{subdomain || 'your-identifier'}
+          </span>
+        </label>
       </div>
 
       <div className="flex justify-end gap-3 pt-2">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900"
+          className="btn btn-ghost"
           disabled={isLoading}
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+          className="btn btn-primary"
           disabled={isLoading}
         >
           {isLoading ? 'Creating...' : 'Create Project'}
