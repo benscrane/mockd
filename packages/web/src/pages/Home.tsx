@@ -82,7 +82,7 @@ export function Home() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow-sm">
+      <header className="bg-white shadow-xs">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">Relay</h1>
@@ -130,7 +130,7 @@ export function Home() {
 
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         {showForm && (
-          <div className="mb-8 bg-white rounded-lg shadow p-6">
+          <div className="mb-8 bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-lg font-medium text-gray-900 mb-4">Create New Project</h2>
             <ProjectForm
               onSubmit={handleCreateProject}

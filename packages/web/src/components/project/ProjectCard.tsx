@@ -11,7 +11,7 @@ export function ProjectCard({ project, endpointCount = 0, onDelete }: ProjectCar
   const isAnonymous = !project.userId;
 
   return (
-    <div className="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
       <Link to={`/projects/${project.id}`} className="block p-4">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
@@ -19,7 +19,7 @@ export function ProjectCard({ project, endpointCount = 0, onDelete }: ProjectCar
               {project.name}
             </h3>
             <p className="text-sm text-gray-500 mt-1">
-              <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">
+              <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded-sm">
                 {project.subdomain}
               </code>
               {isAnonymous && (
