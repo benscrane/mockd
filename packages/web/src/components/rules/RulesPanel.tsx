@@ -42,11 +42,11 @@ export function RulesPanel({ projectId, endpointId }: RulesPanelProps) {
 
   if (loading && rules.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-sm">
-        <div className="px-4 py-3 border-b border-gray-200">
-          <h3 className="font-semibold text-gray-800">Mock Rules</h3>
+      <div className="card bg-base-100 shadow-sm">
+        <div className="px-4 py-3 border-b border-base-200">
+          <h3 className="font-semibold text-base-content">Mock Rules</h3>
         </div>
-        <div className="px-4 py-12 text-center text-gray-400">
+        <div className="px-4 py-12 text-center text-base-content/50">
           Loading rules...
         </div>
       </div>
@@ -55,11 +55,11 @@ export function RulesPanel({ projectId, endpointId }: RulesPanelProps) {
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg shadow-sm">
-        <div className="px-4 py-3 border-b border-gray-200">
-          <h3 className="font-semibold text-gray-800">Mock Rules</h3>
+      <div className="card bg-base-100 shadow-sm">
+        <div className="px-4 py-3 border-b border-base-200">
+          <h3 className="font-semibold text-base-content">Mock Rules</h3>
         </div>
-        <div className="px-4 py-4 text-center text-red-500">
+        <div className="px-4 py-4 text-center text-error">
           {error}
         </div>
       </div>
@@ -67,13 +67,13 @@ export function RulesPanel({ projectId, endpointId }: RulesPanelProps) {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm">
-      <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-        <h3 className="font-semibold text-gray-800">Mock Rules</h3>
+    <div className="card bg-base-100 shadow-sm">
+      <div className="px-4 py-3 border-b border-base-200 flex items-center justify-between">
+        <h3 className="font-semibold text-base-content">Mock Rules</h3>
         {formMode.type === 'closed' && (
           <button
             onClick={() => setFormMode({ type: 'create' })}
-            className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="btn btn-primary btn-sm"
           >
             Add Rule
           </button>
@@ -82,7 +82,7 @@ export function RulesPanel({ projectId, endpointId }: RulesPanelProps) {
 
       {formMode.type !== 'closed' ? (
         <div className="p-4">
-          <h4 className="font-medium text-gray-800 mb-4">
+          <h4 className="font-medium text-base-content mb-4">
             {formMode.type === 'create' ? 'Create New Rule' : 'Edit Rule'}
           </h4>
           <RuleForm

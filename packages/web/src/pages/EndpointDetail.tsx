@@ -59,18 +59,18 @@ export function EndpointDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-gray-500">Loading endpoint...</div>
+      <div className="min-h-screen bg-base-200 flex items-center justify-center">
+        <div className="text-base-content/70">Loading endpoint...</div>
       </div>
     );
   }
 
   if (error || !project || !endpoint) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-base-200 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 mb-4">{error || 'Endpoint not found'}</p>
-          <Link to={projectId ? `/projects/${projectId}` : '/'} className="text-blue-600 hover:text-blue-800">
+          <p className="text-error mb-4">{error || 'Endpoint not found'}</p>
+          <Link to={projectId ? `/projects/${projectId}` : '/'} className="link link-primary">
             Back to Project
           </Link>
         </div>
@@ -81,31 +81,31 @@ export function EndpointDetail() {
   const endpointUrl = getMockApiUrl(getProjectDoName(project)) + endpoint.path;
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow-xs">
+    <div className="min-h-screen bg-base-200">
+      <header className="bg-base-100 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
-            <Link to={`/projects/${projectId}`} className="text-gray-500 hover:text-gray-700">
+            <Link to={`/projects/${projectId}`} className="text-base-content/70 hover:text-base-content">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </Link>
             <div>
-              <h1 className="text-xl font-bold text-gray-900 font-mono">{endpoint.path}</h1>
-              <p className="text-sm text-gray-500">{project.name}</p>
+              <h1 className="text-xl font-bold text-base-content font-mono">{endpoint.path}</h1>
+              <p className="text-sm text-base-content/70">{project.name}</p>
             </div>
             <div className="ml-auto flex items-center gap-2">
               {status === 'connected' && (
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  <span className="text-xs text-gray-500">Live</span>
+                  <span className="w-2 h-2 bg-success rounded-full animate-pulse" />
+                  <span className="text-xs text-base-content/70">Live</span>
                 </span>
               )}
               {status === 'connecting' && (
-                <span className="text-xs text-gray-500">Connecting...</span>
+                <span className="text-xs text-base-content/70">Connecting...</span>
               )}
               {status === 'disconnected' && (
-                <span className="text-xs text-red-500">Disconnected</span>
+                <span className="text-xs text-error">Disconnected</span>
               )}
             </div>
           </div>
@@ -113,21 +113,21 @@ export function EndpointDetail() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-6 bg-white rounded-lg shadow-sm p-4">
+        <div className="card bg-base-100 shadow-sm mb-6 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <label className="text-sm text-gray-500 block mb-1">Endpoint URL</label>
-              <code className="text-sm font-mono text-gray-800">{endpointUrl}</code>
+              <label className="text-sm text-base-content/70 block mb-1">Endpoint URL</label>
+              <code className="text-sm font-mono text-base-content">{endpointUrl}</code>
             </div>
             <CopyButton text={endpointUrl} label="Copy URL" />
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+          <div className="mt-4 grid grid-cols-2 gap-4 pt-4 border-t border-base-200">
             <div>
-              <span className="text-xs text-gray-500">Status Code</span>
+              <span className="text-xs text-base-content/70">Status Code</span>
               <p className="text-sm font-medium">{endpoint.statusCode}</p>
             </div>
             <div>
-              <span className="text-xs text-gray-500">Delay</span>
+              <span className="text-xs text-base-content/70">Delay</span>
               <p className="text-sm font-medium">{endpoint.delay > 0 ? `${endpoint.delay}ms` : 'None'}</p>
             </div>
           </div>

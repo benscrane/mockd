@@ -131,7 +131,7 @@ export function Home() {
         </dialog>
 
         {error && (
-          <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-md text-red-600">
+          <div className="alert alert-error mb-8">
             {error}
           </div>
         )}
