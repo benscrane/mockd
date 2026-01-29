@@ -24,6 +24,9 @@ new_sqlite_classes = ["EndpointDO"]
 # Production environment
 [env.production]
 vars = { ENVIRONMENT = "production" }
+routes = [
+  { pattern = "*.mockd.sh/*", zone_name = "mockd.sh" }
+]
 
 [[env.production.durable_objects.bindings]]
 name = "ENDPOINT_DO"
