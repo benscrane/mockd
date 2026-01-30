@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import type { Project, CreateProjectRequest } from '@mockd/shared';
 import { getApiBaseUrl } from '../config';
 import {
@@ -101,13 +102,16 @@ export function useProjects(): UseProjectsReturn {
 
     if (!response.ok) {
       const json = await response.json().catch(() => ({}));
-      throw new Error(json.error || 'Failed to create project');
+      const errorMsg = json.error || 'Failed to create project';
+      toast.error(errorMsg);
+      throw new Error(errorMsg);
     }
 
     const json = await response.json();
     const newProject = json.data as Project;
 
     setProjects(prev => [...prev, newProject]);
+    toast.success('Project created');
 
     return newProject;
   }, []);
@@ -145,7 +149,9 @@ export function useProjects(): UseProjectsReturn {
 
     if (!response.ok) {
       const json = await response.json().catch(() => ({}));
-      throw new Error(json.error || 'Failed to create anonymous project');
+      const errorMsg = json.error || 'Failed to create project';
+      toast.error(errorMsg);
+      throw new Error(errorMsg);
     }
 
     const json = await response.json();
@@ -155,6 +161,7 @@ export function useProjects(): UseProjectsReturn {
     addAnonymousProjectId(newProject.id);
 
     setProjects(prev => [...prev, newProject]);
+    toast.success('Project created');
 
     return newProject;
   }, []);
@@ -169,13 +176,16 @@ export function useProjects(): UseProjectsReturn {
 
     if (!response.ok) {
       const json = await response.json().catch(() => ({}));
-      throw new Error(json.error || 'Failed to update project');
+      const errorMsg = json.error || 'Failed to update project';
+      toast.error(errorMsg);
+      throw new Error(errorMsg);
     }
 
     const json = await response.json();
     const updatedProject = json.data as Project;
 
     setProjects(prev => prev.map(p => p.id === projectId ? updatedProject : p));
+    toast.success('Project updated');
 
     return updatedProject;
   }, []);
@@ -187,13 +197,16 @@ export function useProjects(): UseProjectsReturn {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to delete project');
+      const errorMsg = 'Failed to delete project';
+      toast.error(errorMsg);
+      throw new Error(errorMsg);
     }
 
     // Remove from localStorage if it was an anonymous project
     removeAnonymousProjectId(projectId);
 
     setProjects(prev => prev.filter(p => p.id !== projectId));
+    toast.success('Project deleted');
   }, []);
 
   const clearProjects = useCallback(() => {

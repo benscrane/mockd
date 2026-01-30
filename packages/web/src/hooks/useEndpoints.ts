@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import type { Endpoint, CreateEndpointRequest, UpdateEndpointRequest } from '@mockd/shared';
 import { getApiBaseUrl } from '../config';
 
@@ -55,13 +56,16 @@ export function useEndpoints(): UseEndpointsReturn {
 
     if (!response.ok) {
       const json = await response.json().catch(() => ({}));
-      throw new Error(json.error || 'Failed to create endpoint');
+      const errorMsg = json.error || 'Failed to create endpoint';
+      toast.error(errorMsg);
+      throw new Error(errorMsg);
     }
 
     const json = await response.json();
     const newEndpoint = json.data as Endpoint;
 
     setEndpoints(prev => [...prev, newEndpoint]);
+    toast.success('Endpoint created');
 
     return newEndpoint;
   }, []);
@@ -82,13 +86,16 @@ export function useEndpoints(): UseEndpointsReturn {
     );
 
     if (!response.ok) {
-      throw new Error('Failed to update endpoint');
+      const errorMsg = 'Failed to update endpoint';
+      toast.error(errorMsg);
+      throw new Error(errorMsg);
     }
 
     const json = await response.json();
     const updatedEndpoint = json.data as Endpoint;
 
     setEndpoints(prev => prev.map(e => e.id === endpointId ? updatedEndpoint : e));
+    toast.success('Endpoint updated');
 
     return updatedEndpoint;
   }, []);
@@ -106,10 +113,13 @@ export function useEndpoints(): UseEndpointsReturn {
     );
 
     if (!response.ok) {
-      throw new Error('Failed to delete endpoint');
+      const errorMsg = 'Failed to delete endpoint';
+      toast.error(errorMsg);
+      throw new Error(errorMsg);
     }
 
     setEndpoints(prev => prev.filter(e => e.id !== endpointId));
+    toast.success('Endpoint deleted');
   }, []);
 
   return {
