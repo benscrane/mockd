@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import type { MockRule, CreateMockRuleRequest, UpdateMockRuleRequest } from '@mockd/shared';
 import { getApiBaseUrl } from '../config';
 
@@ -56,13 +57,16 @@ export function useRules(): UseRulesReturn {
     );
 
     if (!response.ok) {
-      throw new Error('Failed to create rule');
+      const errorMsg = 'Failed to create rule';
+      toast.error(errorMsg);
+      throw new Error(errorMsg);
     }
 
     const json = await response.json();
     const newRule = json.data as MockRule;
 
     setRules(prev => [...prev, newRule]);
+    toast.success('Rule created');
 
     return newRule;
   }, []);
@@ -84,13 +88,16 @@ export function useRules(): UseRulesReturn {
     );
 
     if (!response.ok) {
-      throw new Error('Failed to update rule');
+      const errorMsg = 'Failed to update rule';
+      toast.error(errorMsg);
+      throw new Error(errorMsg);
     }
 
     const json = await response.json();
     const updatedRule = json.data as MockRule;
 
     setRules(prev => prev.map(r => r.id === ruleId ? updatedRule : r));
+    toast.success('Rule updated');
 
     return updatedRule;
   }, []);
@@ -109,10 +116,13 @@ export function useRules(): UseRulesReturn {
     );
 
     if (!response.ok) {
-      throw new Error('Failed to delete rule');
+      const errorMsg = 'Failed to delete rule';
+      toast.error(errorMsg);
+      throw new Error(errorMsg);
     }
 
     setRules(prev => prev.filter(r => r.id !== ruleId));
+    toast.success('Rule deleted');
   }, []);
 
   return {

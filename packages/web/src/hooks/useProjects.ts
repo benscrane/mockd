@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import type { Project, CreateProjectRequest } from '@mockd/shared';
 import { getApiBaseUrl } from '../config';
 import {
@@ -101,13 +102,16 @@ export function useProjects(): UseProjectsReturn {
 
     if (!response.ok) {
       const json = await response.json().catch(() => ({}));
-      throw new Error(json.error || 'Failed to create project');
+      const errorMsg = json.error || 'Failed to create project';
+      toast.error(errorMsg);
+      throw new Error(errorMsg);
     }
 
     const json = await response.json();
     const newProject = json.data as Project;
 
     setProjects(prev => [...prev, newProject]);
+    toast.success('Project created');
 
     return newProject;
   }, []);
@@ -145,7 +149,9 @@ export function useProjects(): UseProjectsReturn {
 
     if (!response.ok) {
       const json = await response.json().catch(() => ({}));
-      throw new Error(json.error || 'Failed to create anonymous project');
+      const errorMsg = json.error || 'Failed to create project';
+      toast.error(errorMsg);
+      throw new Error(errorMsg);
     }
 
     const json = await response.json();
@@ -155,11 +161,18 @@ export function useProjects(): UseProjectsReturn {
     addAnonymousProjectId(newProject.id);
 
     setProjects(prev => [...prev, newProject]);
+    toast.success('Project created');
 
     return newProject;
   }, []);
 
   const updateProject = useCallback(async (projectId: string, data: { name?: string }): Promise<Project> => {
+    // Store previous state for rollback
+    const previousProjects = projects;
+
+    // Optimistic update
+    setProjects(prev => prev.map(p => p.id === projectId ? { ...p, ...data } : p));
+
     const response = await fetch(`${getApiBaseUrl()}/api/projects/${projectId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -168,33 +181,48 @@ export function useProjects(): UseProjectsReturn {
     });
 
     if (!response.ok) {
+      // Rollback on error
+      setProjects(previousProjects);
       const json = await response.json().catch(() => ({}));
-      throw new Error(json.error || 'Failed to update project');
+      const errorMsg = json.error || 'Failed to update project';
+      toast.error(errorMsg);
+      throw new Error(errorMsg);
     }
 
     const json = await response.json();
     const updatedProject = json.data as Project;
 
+    // Update with server response to ensure consistency
     setProjects(prev => prev.map(p => p.id === projectId ? updatedProject : p));
+    toast.success('Project updated');
 
     return updatedProject;
-  }, []);
+  }, [projects]);
 
   const deleteProject = useCallback(async (projectId: string): Promise<void> => {
+    // Store previous state for rollback
+    const previousProjects = projects;
+
+    // Optimistic update
+    setProjects(prev => prev.filter(p => p.id !== projectId));
+
     const response = await fetch(`${getApiBaseUrl()}/api/projects/${projectId}`, {
       method: 'DELETE',
       credentials: 'include',
     });
 
     if (!response.ok) {
-      throw new Error('Failed to delete project');
+      // Rollback on error
+      setProjects(previousProjects);
+      const errorMsg = 'Failed to delete project';
+      toast.error(errorMsg);
+      throw new Error(errorMsg);
     }
 
     // Remove from localStorage if it was an anonymous project
     removeAnonymousProjectId(projectId);
-
-    setProjects(prev => prev.filter(p => p.id !== projectId));
-  }, []);
+    toast.success('Project deleted');
+  }, [projects]);
 
   const clearProjects = useCallback(() => {
     setProjects([]);
