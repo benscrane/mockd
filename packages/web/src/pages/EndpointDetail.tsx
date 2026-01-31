@@ -5,7 +5,7 @@ import { useProjects, useEndpoints, useWebSocket } from '../hooks';
 import { RequestList } from '../components/request';
 import { RulesPanel } from '../components/rules';
 import { EndpointForm } from '../components/endpoint';
-import { CopyButton, ConfirmDialog } from '../components/common';
+import { Breadcrumbs, CopyButton, ConfirmDialog } from '../components/common';
 import { getMockApiSubdomainUrl, getProjectDoName } from '../config';
 
 export function EndpointDetail() {
@@ -110,15 +110,16 @@ export function EndpointDetail() {
     <div className="min-h-screen bg-base-200">
       <header className="bg-base-100 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-4">
-            <Link to={`/projects/${projectId}`} className="text-base-content/70 hover:text-base-content">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </Link>
+          <Breadcrumbs
+            items={[
+              { label: 'Home', href: '/' },
+              { label: project.name, href: `/projects/${projectId}` },
+              { label: endpoint.path },
+            ]}
+          />
+          <div className="flex items-center gap-4 mt-2">
             <div>
               <h1 className="text-xl font-bold text-base-content font-mono">{endpoint.path}</h1>
-              <p className="text-sm text-base-content/70">{project.name}</p>
             </div>
             <div className="ml-auto">
               <div className="dropdown dropdown-end">
