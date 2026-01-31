@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useMemo } from 'react';
 
 interface JsonEditorProps {
   value: string;
@@ -7,6 +7,33 @@ interface JsonEditorProps {
   rows?: number;
   disabled?: boolean;
   id?: string;
+}
+
+function isValidJson(value: string): boolean {
+  if (!value.trim()) return true; // Empty is valid (for optional fields)
+  try {
+    JSON.parse(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function formatJson(value: string): string {
+  try {
+    const parsed = JSON.parse(value);
+    return JSON.stringify(parsed, null, 2);
+  } catch {
+    return value;
+  }
+}
+
+function FormatIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h8m-8 6h16" />
+    </svg>
+  );
 }
 
 type TokenType = 'key' | 'string' | 'number' | 'boolean' | 'null' | 'punctuation';
@@ -148,8 +175,29 @@ export function JsonEditor({
   // Calculate min-height based on rows (approximate line height of 1.5rem)
   const minHeight = `${rows * 1.5}rem`;
 
+  const canFormat = useMemo(() => {
+    if (!value.trim()) return false;
+    return isValidJson(value);
+  }, [value]);
+
+  const handleFormat = useCallback(() => {
+    if (canFormat) {
+      onChange(formatJson(value));
+    }
+  }, [value, onChange, canFormat]);
+
   return (
     <div className="relative font-mono text-sm bg-base-100 rounded-lg">
+      {/* Format button */}
+      <button
+        type="button"
+        onClick={handleFormat}
+        disabled={disabled || !canFormat}
+        className="absolute top-1 right-1 z-20 btn btn-xs btn-ghost text-base-content/50 hover:text-base-content disabled:opacity-30"
+        title={canFormat ? 'Format JSON' : 'Invalid JSON'}
+      >
+        <FormatIcon />
+      </button>
       {/* Syntax highlighted background layer */}
       <pre
         ref={highlightRef}
