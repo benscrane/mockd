@@ -143,9 +143,6 @@ export function ProjectDetail() {
                 )}
                 <p className="text-sm text-base-content/70">
                   <code className="text-xs bg-base-200 px-1.5 py-0.5 rounded-sm">{project.subdomain}</code>
-                  {!project.userId && (
-                    <span className="ml-2 text-xs text-amber-600">(anonymous)</span>
-                  )}
                 </p>
               </div>
             </div>
