@@ -54,7 +54,7 @@ describe('API Router', () => {
         });
 
         const request = makeRequest('/api/projects', {
-          cookie: `session=${session.id}`,
+          cookie: `mockd_session=${session.id}`,
         });
 
         const response = await app.fetch(request, env);
@@ -74,7 +74,7 @@ describe('API Router', () => {
         createTestProject(store, { id: 'proj_2', user_id: user2.id, subdomain: 'sub2' });
 
         const request = makeRequest('/api/projects', {
-          cookie: `session=${session.id}`,
+          cookie: `mockd_session=${session.id}`,
         });
 
         const response = await app.fetch(request, env);
@@ -97,7 +97,7 @@ describe('API Router', () => {
             name: 'My Project',
             subdomain: 'my-project',
           },
-          cookie: `session=${session.id}`,
+          cookie: `mockd_session=${session.id}`,
         });
 
         const response = await app.fetch(request, env);
@@ -132,7 +132,7 @@ describe('API Router', () => {
         const request = makeRequest('/api/projects', {
           method: 'POST',
           body: { subdomain: 'my-project' },
-          cookie: `session=${session.id}`,
+          cookie: `mockd_session=${session.id}`,
         });
 
         const response = await app.fetch(request, env);
@@ -149,7 +149,7 @@ describe('API Router', () => {
         const request = makeRequest('/api/projects', {
           method: 'POST',
           body: { name: 'My Project' },
-          cookie: `session=${session.id}`,
+          cookie: `mockd_session=${session.id}`,
         });
 
         const response = await app.fetch(request, env);
@@ -169,7 +169,7 @@ describe('API Router', () => {
             name: 'My Project',
             subdomain: '-invalid',
           },
-          cookie: `session=${session.id}`,
+          cookie: `mockd_session=${session.id}`,
         });
 
         const response = await app.fetch(request, env);
@@ -189,7 +189,7 @@ describe('API Router', () => {
             name: 'My Project',
             subdomain: 'ab',
           },
-          cookie: `session=${session.id}`,
+          cookie: `mockd_session=${session.id}`,
         });
 
         const response = await app.fetch(request, env);
@@ -210,7 +210,7 @@ describe('API Router', () => {
             name: 'My Project',
             subdomain: 'taken-subdomain',
           },
-          cookie: `session=${session.id}`,
+          cookie: `mockd_session=${session.id}`,
         });
 
         const response = await app.fetch(request, env);
@@ -230,7 +230,7 @@ describe('API Router', () => {
             name: 'My Project',
             subdomain: 'My-Project',
           },
-          cookie: `session=${session.id}`,
+          cookie: `mockd_session=${session.id}`,
         });
 
         const response = await app.fetch(request, env);
@@ -252,7 +252,7 @@ describe('API Router', () => {
               name: `Project ${i}`,
               subdomain: `project-${i}`,
             },
-            cookie: `session=${session.id}`,
+            cookie: `mockd_session=${session.id}`,
           });
 
           const response = await app.fetch(request, env);
@@ -279,7 +279,7 @@ describe('API Router', () => {
             name: 'Project 4',
             subdomain: 'project-four',
           },
-          cookie: `session=${session.id}`,
+          cookie: `mockd_session=${session.id}`,
         });
 
         const response = await app.fetch(request, env);
@@ -308,7 +308,7 @@ describe('API Router', () => {
             name: 'Project 4',
             subdomain: 'pro-project-4',
           },
-          cookie: `session=${session.id}`,
+          cookie: `mockd_session=${session.id}`,
         });
 
         const response = await app.fetch(request, env);
@@ -335,7 +335,7 @@ describe('API Router', () => {
             name: 'User1 Project',
             subdomain: 'user1-project',
           },
-          cookie: `session=${session.id}`,
+          cookie: `mockd_session=${session.id}`,
         });
 
         const response = await app.fetch(request, env);
@@ -385,7 +385,7 @@ describe('API Router', () => {
         });
 
         const request = makeRequest(`/api/projects/${project.id}`, {
-          cookie: `session=${session.id}`,
+          cookie: `mockd_session=${session.id}`,
         });
 
         const response = await app.fetch(request, env);
@@ -434,7 +434,7 @@ describe('API Router', () => {
         });
 
         const request = makeRequest(`/api/projects/${project.id}`, {
-          cookie: `session=${session.id}`,
+          cookie: `mockd_session=${session.id}`,
         });
 
         const response = await app.fetch(request, env);
@@ -457,7 +457,7 @@ describe('API Router', () => {
 
         const request = makeRequest(`/api/projects/${project.id}`, {
           method: 'DELETE',
-          cookie: `session=${session.id}`,
+          cookie: `mockd_session=${session.id}`,
         });
 
         const response = await app.fetch(request, env);
@@ -510,7 +510,7 @@ describe('API Router', () => {
 
         const request = makeRequest(`/api/projects/${project.id}`, {
           method: 'DELETE',
-          cookie: `session=${session.id}`,
+          cookie: `mockd_session=${session.id}`,
         });
 
         const response = await app.fetch(request, env);

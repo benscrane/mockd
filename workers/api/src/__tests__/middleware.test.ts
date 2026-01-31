@@ -38,7 +38,7 @@ describe('Middleware', () => {
       const session = createTestSession(store, user.id, { id: 'session_abc' });
 
       const request = makeRequest('/test', {
-        cookie: `session=${session.id}`,
+        cookie: `mockd_session=${session.id}`,
       });
 
       const response = await app.fetch(request, env);
@@ -72,7 +72,7 @@ describe('Middleware', () => {
       });
 
       const request = makeRequest('/test', {
-        cookie: `session=${session.id}`,
+        cookie: `mockd_session=${session.id}`,
       });
 
       const response = await app.fetch(request, env);
@@ -85,7 +85,7 @@ describe('Middleware', () => {
 
     it('should set user and userId to null when session does not exist', async () => {
       const request = makeRequest('/test', {
-        cookie: 'session=nonexistent_session',
+        cookie: 'mockd_session=nonexistent_session',
       });
 
       const response = await app.fetch(request, env);
@@ -113,7 +113,7 @@ describe('Middleware', () => {
       const session = createTestSession(store, user.id, { id: 'session_abc' });
 
       const request = makeRequest('/protected', {
-        cookie: `session=${session.id}`,
+        cookie: `mockd_session=${session.id}`,
       });
 
       const response = await app.fetch(request, env);
@@ -139,7 +139,7 @@ describe('Middleware', () => {
 
     it('should return 401 when session is invalid', async () => {
       const request = makeRequest('/protected', {
-        cookie: 'session=invalid_session',
+        cookie: 'mockd_session=invalid_session',
       });
 
       const response = await app.fetch(request, env);
@@ -157,7 +157,7 @@ describe('Middleware', () => {
       });
 
       const request = makeRequest('/protected', {
-        cookie: `session=${session.id}`,
+        cookie: `mockd_session=${session.id}`,
       });
 
       const response = await app.fetch(request, env);

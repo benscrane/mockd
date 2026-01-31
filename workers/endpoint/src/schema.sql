@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS request_logs (
   headers TEXT NOT NULL DEFAULT '{}',
   body TEXT,
   timestamp TEXT NOT NULL DEFAULT (datetime('now')),
+  response_status INTEGER,
+  response_time_ms INTEGER,
   FOREIGN KEY (endpoint_id) REFERENCES endpoints(id)
 );
 

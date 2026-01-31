@@ -35,7 +35,7 @@ export interface PongMessage extends ServerMessage {
 }
 
 export interface RequestLog {
-  [key: string]: string | null;
+  [key: string]: string | number | null;
   id: string;
   endpoint_id: string;
   method: string;
@@ -46,6 +46,8 @@ export interface RequestLog {
   matched_rule_id: string | null;
   matched_rule_name: string | null;
   path_params: string | null; // JSON string
+  response_status: number | null;
+  response_time_ms: number | null;
 }
 
 export interface RequestMessage extends ServerMessage {

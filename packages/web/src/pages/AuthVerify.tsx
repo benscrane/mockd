@@ -1,12 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-
-function getApiBaseUrl(): string {
-  if (import.meta.env.DEV) {
-    return 'http://localhost:8787';
-  }
-  return '';
-}
+import { getApiDirectUrl } from '../config';
 
 export function AuthVerify() {
   const [searchParams] = useSearchParams();
@@ -30,7 +24,7 @@ export function AuthVerify() {
 
     // Redirect to API verify endpoint
     if (token) {
-      window.location.href = `${getApiBaseUrl()}/api/auth/magic-link/verify?token=${encodeURIComponent(token)}`;
+      window.location.href = `${getApiDirectUrl()}/api/auth/magic-link/verify?token=${encodeURIComponent(token)}`;
     } else {
       setError('No verification token provided.');
     }

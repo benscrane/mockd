@@ -6,9 +6,22 @@ function stripTrailingSlash(url: string): string {
 }
 
 /**
- * Get the base URL for the API worker
+ * Get the base URL for the API worker (for AJAX requests)
+ * In dev: empty string to use Vite proxy (same-origin, cookies work)
+ * In prod: the configured API URL
  */
 export function getApiBaseUrl(): string {
+  if (import.meta.env.DEV) {
+    return '';  // Use relative URLs through Vite proxy
+  }
+  return stripTrailingSlash(import.meta.env.VITE_API_URL || '');
+}
+
+/**
+ * Get the direct API URL for browser redirects (OAuth, magic links)
+ * These can't go through the proxy since they're full page navigations
+ */
+export function getApiDirectUrl(): string {
   if (import.meta.env.DEV) {
     return 'http://localhost:8787';
   }

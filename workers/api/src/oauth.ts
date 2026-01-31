@@ -210,7 +210,7 @@ oauthRouter.get('/github/callback', async (c) => {
   ).bind(sessionId, user!.id, sessionExpiresAt, now).run();
 
   // Set session cookie
-  setCookie(c, 'session', sessionId, {
+  setCookie(c, 'mockd_session', sessionId, {
     httpOnly: true,
     secure: c.env.ENVIRONMENT !== 'development',
     sameSite: c.env.ENVIRONMENT === 'development' ? 'Lax' : 'None',
