@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import type { Project, CreateEndpointRequest } from '@mockd/shared';
 import { useProjects, useEndpoints } from '../hooks';
 import { EndpointList, EndpointForm } from '../components/endpoint';
-import { CopyButton, ConfirmDialog } from '../components/common';
+import { Breadcrumbs, CopyButton, ConfirmDialog } from '../components/common';
 import { getMockApiSubdomainUrl } from '../config';
 
 export function ProjectDetail() {
@@ -114,13 +114,14 @@ export function ProjectDetail() {
     <div className="min-h-screen bg-base-200">
       <header className="bg-base-100 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
+          <Breadcrumbs
+            items={[
+              { label: 'Home', href: '/' },
+              { label: project.name },
+            ]}
+          />
+          <div className="flex items-center justify-between mt-2">
             <div className="flex items-center gap-4">
-              <Link to="/" className="text-base-content/70 hover:text-base-content">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </Link>
               <div>
                 {isEditing ? (
                   <div className="flex items-center gap-2">

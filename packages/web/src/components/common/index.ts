@@ -1,3 +1,4 @@
+export { Breadcrumbs, type BreadcrumbItem } from './Breadcrumbs';
 export { ConfirmDialog } from './ConfirmDialog';
 export { CopyButton } from './CopyButton';
 export { MethodBadge } from './MethodBadge';
