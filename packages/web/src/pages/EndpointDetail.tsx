@@ -21,6 +21,7 @@ export function EndpointDetail() {
   const [isEditing, setIsEditing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isBodyExpanded, setIsBodyExpanded] = useState(false);
 
   // Get the DO name for WebSocket connection (subdomain for user-owned, id for anonymous)
   const doName = useMemo(() => project ? getProjectDoName(project) : undefined, [project]);
@@ -176,16 +177,31 @@ export function EndpointDetail() {
               </div>
             </div>
             <div className="mt-4 pt-4 border-t border-base-200">
-              <span className="text-xs text-base-content/70 block mb-2">Response Body</span>
-              <pre className="bg-base-200 p-3 rounded-lg text-sm font-mono overflow-x-auto max-h-48 overflow-y-auto">
-                {(() => {
-                  try {
-                    return JSON.stringify(JSON.parse(endpoint.responseBody), null, 2);
-                  } catch {
-                    return endpoint.responseBody;
-                  }
-                })()}
-              </pre>
+              <button
+                onClick={() => setIsBodyExpanded(!isBodyExpanded)}
+                className="flex items-center gap-2 text-xs text-base-content/70 hover:text-base-content transition-colors w-full"
+              >
+                <svg
+                  className={`w-4 h-4 transition-transform ${isBodyExpanded ? 'rotate-90' : ''}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+                Response Body
+              </button>
+              {isBodyExpanded && (
+                <pre className="bg-base-200 p-3 rounded-lg text-sm font-mono overflow-x-auto max-h-48 overflow-y-auto mt-2">
+                  {(() => {
+                    try {
+                      return JSON.stringify(JSON.parse(endpoint.responseBody), null, 2);
+                    } catch {
+                      return endpoint.responseBody;
+                    }
+                  })()}
+                </pre>
+              )}
             </div>
           </div>
         )}

@@ -129,7 +129,7 @@ router.post('/projects/anonymous', async (c) => {
   const body = await c.req.json<{ name?: string }>();
   const id = generateProjectId();
   const now = new Date().toISOString();
-  const name = body.name || 'Untitled Mock';
+  const name = body.name || 'Temporary Mock';
 
   // Anonymous projects use their ID as the subdomain (for uniqueness constraint)
   // They're accessed via /m/{id}/... path-based routing
