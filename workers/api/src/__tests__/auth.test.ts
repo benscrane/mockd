@@ -44,7 +44,7 @@ describe('Auth Router', () => {
 
       // Check session cookie is set
       const setCookie = response.headers.get('Set-Cookie');
-      expect(setCookie).toContain('session=');
+      expect(setCookie).toContain('mockd_session=');
     });
 
     it('should return 400 when email is missing', async () => {
@@ -199,7 +199,7 @@ describe('Auth Router', () => {
 
       const request = makeRequest('/api/auth/logout', {
         method: 'POST',
-        cookie: `session=${session.id}`,
+        cookie: `mockd_session=${session.id}`,
       });
 
       const response = await app.fetch(request, env);
@@ -236,7 +236,7 @@ describe('Auth Router', () => {
 
       const request = makeRequest('/api/auth/me', {
         method: 'GET',
-        cookie: `session=${session.id}`,
+        cookie: `mockd_session=${session.id}`,
       });
 
       const response = await app.fetch(request, env);
@@ -265,7 +265,7 @@ describe('Auth Router', () => {
     it('should return 401 when session is invalid', async () => {
       const request = makeRequest('/api/auth/me', {
         method: 'GET',
-        cookie: 'session=invalid_session',
+        cookie: 'mockd_session=invalid_session',
       });
 
       const response = await app.fetch(request, env);
@@ -284,7 +284,7 @@ describe('Auth Router', () => {
 
       const request = makeRequest('/api/auth/me', {
         method: 'GET',
-        cookie: `session=${session.id}`,
+        cookie: `mockd_session=${session.id}`,
       });
 
       const response = await app.fetch(request, env);

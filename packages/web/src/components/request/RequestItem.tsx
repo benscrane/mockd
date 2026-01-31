@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { RequestLog } from '@mockd/shared';
 import { MethodBadge } from '../common/MethodBadge';
+import { StatusBadge } from '../common/StatusBadge';
 import { RequestDetails } from './RequestDetails';
 
 interface RequestItemProps {
@@ -43,12 +44,18 @@ export function RequestItem({ request }: RequestItemProps) {
           {expanded ? '▼' : '▶'}
         </span>
         <MethodBadge method={request.method} />
+        <StatusBadge status={request.response_status} />
         <span className="flex-1 font-mono text-sm text-base-content truncate">
           {request.path}
         </span>
         {(request.matched_rule_name || request.matched_rule_id) && (
           <span className="badge badge-secondary">
             {request.matched_rule_name || 'Rule'}
+          </span>
+        )}
+        {request.response_time_ms !== null && (
+          <span className="text-xs text-base-content/50 font-mono">
+            {request.response_time_ms}ms
           </span>
         )}
         <span className="text-xs text-base-content/50">

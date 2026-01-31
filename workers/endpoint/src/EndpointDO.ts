@@ -83,6 +83,8 @@ export class EndpointDO implements DurableObject {
         matched_rule_id TEXT,
         matched_rule_name TEXT,
         path_params TEXT,
+        response_status INTEGER,
+        response_time_ms INTEGER,
         FOREIGN KEY (endpoint_id) REFERENCES endpoints(id)
       );
 
@@ -109,6 +111,18 @@ export class EndpointDO implements DurableObject {
       CREATE INDEX IF NOT EXISTS idx_request_logs_timestamp ON request_logs(timestamp);
       CREATE INDEX IF NOT EXISTS idx_mock_rules_endpoint ON mock_rules(endpoint_id);
     `);
+
+    // Migrate: add response_status and response_time_ms columns to request_logs
+    const requestLogColumns = this.sql.exec<{ name: string }>(
+      "PRAGMA table_info(request_logs)"
+    ).toArray();
+
+    if (!requestLogColumns.some(c => c.name === 'response_status')) {
+      this.sql.exec(`ALTER TABLE request_logs ADD COLUMN response_status INTEGER`);
+    }
+    if (!requestLogColumns.some(c => c.name === 'response_time_ms')) {
+      this.sql.exec(`ALTER TABLE request_logs ADD COLUMN response_time_ms INTEGER`);
+    }
   }
 
   private getRulesForEndpoint(endpointId: string): MockRule[] {
@@ -553,6 +567,7 @@ export class EndpointDO implements DurableObject {
   }
 
   private async handleMockRequest(request: Request): Promise<Response> {
+    const startTime = Date.now();
     const url = new URL(request.url);
     const method = request.method;
     const path = normalizePath(url.pathname);
@@ -626,7 +641,10 @@ export class EndpointDO implements DurableObject {
       responseDelayMs = matchedEndpoint.delay_ms;
     }
 
-    // Log the request with rule info
+    // Calculate response time (processing time before any artificial delay)
+    const responseTimeMs = Date.now() - startTime;
+
+    // Log the request with rule info and response data
     const requestLog = await this.logRequest(
       matchedEndpoint.id,
       method,
@@ -635,7 +653,9 @@ export class EndpointDO implements DurableObject {
       body,
       matchedRuleId,
       matchedRuleName,
-      pathParams
+      pathParams,
+      responseStatus,
+      responseTimeMs
     );
 
     // Broadcast to connected WebSocket clients
@@ -660,7 +680,9 @@ export class EndpointDO implements DurableObject {
     body: string | null,
     matchedRuleId: string | null = null,
     matchedRuleName: string | null = null,
-    pathParams: Record<string, string> | null = null
+    pathParams: Record<string, string> | null = null,
+    responseStatus: number | null = null,
+    responseTimeMs: number | null = null
   ): Promise<RequestLog> {
     const id = `req_${generateId()}`;
     const timestamp = new Date().toISOString();
@@ -677,8 +699,8 @@ export class EndpointDO implements DurableObject {
 
     // Insert into database
     this.sql.exec(
-      `INSERT INTO request_logs (id, endpoint_id, method, path, headers, body, timestamp, matched_rule_id, matched_rule_name, path_params)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO request_logs (id, endpoint_id, method, path, headers, body, timestamp, matched_rule_id, matched_rule_name, path_params, response_status, response_time_ms)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       id,
       endpointId,
       method,
@@ -688,7 +710,9 @@ export class EndpointDO implements DurableObject {
       timestamp,
       matchedRuleId,
       matchedRuleName,
-      pathParamsJson
+      pathParamsJson,
+      responseStatus,
+      responseTimeMs
     );
 
     return {
@@ -702,6 +726,8 @@ export class EndpointDO implements DurableObject {
       matched_rule_id: matchedRuleId,
       matched_rule_name: matchedRuleName,
       path_params: pathParamsJson,
+      response_status: responseStatus,
+      response_time_ms: responseTimeMs,
     };
   }
 

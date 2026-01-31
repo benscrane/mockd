@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import type { User, LoginRequest, RegisterRequest } from '@mockd/shared';
-import { getApiBaseUrl } from '../config';
+import { getApiBaseUrl, getApiDirectUrl } from '../config';
 
 interface AuthContextValue {
   user: User | null;
@@ -154,7 +154,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const loginWithGitHub = useCallback(() => {
-    window.location.href = `${getApiBaseUrl()}/api/auth/github`;
+    window.location.href = `${getApiDirectUrl()}/api/auth/github`;
   }, []);
 
   return (

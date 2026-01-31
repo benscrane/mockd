@@ -38,7 +38,7 @@ async function getUserBySession(db: D1Database, sessionId: string): Promise<DbUs
  * Does NOT block unauthenticated requests - use requireAuth for that.
  */
 export const authMiddleware = createMiddleware<{ Bindings: Env }>(async (c, next) => {
-  const sessionId = getCookie(c, 'session');
+  const sessionId = getCookie(c, 'mockd_session');
 
   if (sessionId) {
     const dbUser = await getUserBySession(c.env.DB, sessionId);
@@ -62,7 +62,7 @@ export const authMiddleware = createMiddleware<{ Bindings: Env }>(async (c, next
  * Returns 401 if no valid session exists.
  */
 export const requireAuth = createMiddleware<{ Bindings: Env }>(async (c, next) => {
-  const sessionId = getCookie(c, 'session');
+  const sessionId = getCookie(c, 'mockd_session');
 
   if (!sessionId) {
     return c.json({ error: 'Authentication required' }, 401);

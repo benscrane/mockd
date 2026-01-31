@@ -149,7 +149,7 @@ authRouter.post('/register', async (c) => {
   ).bind(sessionId, userId, expiresAt, now).run();
 
   // Set session cookie
-  setCookie(c, 'session', sessionId, {
+  setCookie(c, 'mockd_session', sessionId, {
     httpOnly: true,
     secure: c.env.ENVIRONMENT !== 'development',
     sameSite: c.env.ENVIRONMENT === 'development' ? 'Lax' : 'None',
@@ -196,7 +196,7 @@ authRouter.post('/login', async (c) => {
   ).bind(sessionId, user.id, expiresAt, now).run();
 
   // Set session cookie
-  setCookie(c, 'session', sessionId, {
+  setCookie(c, 'mockd_session', sessionId, {
     httpOnly: true,
     secure: c.env.ENVIRONMENT !== 'development',
     sameSite: c.env.ENVIRONMENT === 'development' ? 'Lax' : 'None',
@@ -210,14 +210,14 @@ authRouter.post('/login', async (c) => {
 
 // Logout
 authRouter.post('/logout', async (c) => {
-  const sessionId = getCookie(c, 'session');
+  const sessionId = getCookie(c, 'mockd_session');
 
   if (sessionId) {
     // Delete session from database
     await c.env.DB.prepare('DELETE FROM sessions WHERE id = ?').bind(sessionId).run();
 
     // Clear cookie
-    deleteCookie(c, 'session', {
+    deleteCookie(c, 'mockd_session', {
       path: '/',
       ...(c.env.COOKIE_DOMAIN && { domain: c.env.COOKIE_DOMAIN }),
     });
@@ -228,7 +228,7 @@ authRouter.post('/logout', async (c) => {
 
 // Get current user
 authRouter.get('/me', async (c) => {
-  const sessionId = getCookie(c, 'session');
+  const sessionId = getCookie(c, 'mockd_session');
 
   if (!sessionId) {
     return c.json({ error: 'Not authenticated' }, 401);
@@ -238,7 +238,7 @@ authRouter.get('/me', async (c) => {
 
   if (!user) {
     // Clear invalid session cookie
-    deleteCookie(c, 'session', {
+    deleteCookie(c, 'mockd_session', {
       path: '/',
       ...(c.env.COOKIE_DOMAIN && { domain: c.env.COOKIE_DOMAIN }),
     });

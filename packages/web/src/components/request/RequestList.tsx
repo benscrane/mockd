@@ -1,8 +1,16 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { RequestLog } from '@mockd/shared';
 import { RequestItem } from './RequestItem';
 import { ConfirmDialog } from '../common/ConfirmDialog';
 import type { ConnectionStatus } from '../../hooks/useWebSocket';
+
+const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as const;
+const STATUS_CATEGORIES = [
+  { label: '2xx Success', min: 200, max: 299 },
+  { label: '3xx Redirect', min: 300, max: 399 },
+  { label: '4xx Client Error', min: 400, max: 499 },
+  { label: '5xx Server Error', min: 500, max: 599 },
+] as const;
 
 interface RequestListProps {
   requests: RequestLog[];
@@ -12,6 +20,23 @@ interface RequestListProps {
 
 export function RequestList({ requests, status, onClear }: RequestListProps) {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [methodFilter, setMethodFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
+
+  const filteredRequests = useMemo(() => {
+    return requests.filter(req => {
+      if (methodFilter && req.method.toUpperCase() !== methodFilter) {
+        return false;
+      }
+      if (statusFilter && req.response_status !== null) {
+        const category = STATUS_CATEGORIES.find(c => c.label === statusFilter);
+        if (category && (req.response_status < category.min || req.response_status > category.max)) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [requests, methodFilter, statusFilter]);
 
   const handleClearClick = () => {
     setShowClearConfirm(true);
@@ -38,13 +63,35 @@ export function RequestList({ requests, status, onClear }: RequestListProps) {
             </span>
           )}
         </div>
-        <button
-          onClick={handleClearClick}
-          disabled={requests.length === 0}
-          className="btn btn-ghost btn-sm"
-        >
-          Clear
-        </button>
+        <div className="flex items-center gap-2">
+          <select
+            value={methodFilter}
+            onChange={(e) => setMethodFilter(e.target.value)}
+            className="select select-bordered select-xs"
+          >
+            <option value="">All Methods</option>
+            {HTTP_METHODS.map(method => (
+              <option key={method} value={method}>{method}</option>
+            ))}
+          </select>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="select select-bordered select-xs"
+          >
+            <option value="">All Status</option>
+            {STATUS_CATEGORIES.map(cat => (
+              <option key={cat.label} value={cat.label}>{cat.label}</option>
+            ))}
+          </select>
+          <button
+            onClick={handleClearClick}
+            disabled={requests.length === 0}
+            className="btn btn-ghost btn-sm"
+          >
+            Clear
+          </button>
+        </div>
       </div>
 
       <ConfirmDialog
@@ -69,15 +116,26 @@ export function RequestList({ requests, status, onClear }: RequestListProps) {
             <p className="mb-2 text-warning">Connection lost</p>
             <p className="text-sm">Attempting to reconnect...</p>
           </div>
-        ) : requests.length === 0 ? (
+        ) : filteredRequests.length === 0 ? (
           <div className="px-4 py-12 text-center text-base-content/50">
-            <p className="mb-2">No requests yet</p>
-            <p className="text-sm">
-              Send a request to your endpoint to see it appear here
-            </p>
+            {requests.length === 0 ? (
+              <>
+                <p className="mb-2">No requests yet</p>
+                <p className="text-sm">
+                  Send a request to your endpoint to see it appear here
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="mb-2">No matching requests</p>
+                <p className="text-sm">
+                  Try adjusting your filters ({requests.length} request{requests.length === 1 ? '' : 's'} hidden)
+                </p>
+              </>
+            )}
           </div>
         ) : (
-          requests.map(request => (
+          filteredRequests.map(request => (
             <RequestItem key={request.id} request={request} />
           ))
         )}
