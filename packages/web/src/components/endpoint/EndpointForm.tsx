@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { CreateEndpointRequest, UpdateEndpointRequest, Endpoint } from '@mockd/shared';
+import { TIER_LIMITS } from '@mockd/shared';
 import { JsonEditor } from '../common';
 
 interface EndpointFormCreateProps {
@@ -27,7 +28,7 @@ export function EndpointForm({ endpoint, onSubmit, onCancel, isLoading }: Endpoi
   );
   const [statusCode, setStatusCode] = useState(endpoint?.statusCode?.toString() || '200');
   const [delay, setDelay] = useState(endpoint?.delay?.toString() || '0');
-  const [rateLimit, setRateLimit] = useState(endpoint?.rateLimit?.toString() || '120');
+  const [rateLimit, setRateLimit] = useState(endpoint?.rateLimit?.toString() || String(TIER_LIMITS.free.defaultEndpointRateLimit));
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {

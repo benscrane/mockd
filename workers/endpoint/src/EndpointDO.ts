@@ -11,6 +11,7 @@ import {
   getRateLimitExceededData,
   RATE_LIMIT_WINDOW_MS,
 } from '@mockd/shared/utils';
+import { TIER_LIMITS } from '@mockd/shared/constants';
 import type { RequestContext } from '@mockd/shared/utils';
 import type {
   ClientMessage,
@@ -91,7 +92,7 @@ export class EndpointDO implements DurableObject {
         response_body TEXT NOT NULL DEFAULT '{}',
         status_code INTEGER NOT NULL DEFAULT 200,
         delay_ms INTEGER NOT NULL DEFAULT 0,
-        rate_limit INTEGER NOT NULL DEFAULT 120,
+        rate_limit INTEGER NOT NULL DEFAULT 30,
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
@@ -154,7 +155,7 @@ export class EndpointDO implements DurableObject {
     ).toArray();
 
     if (!endpointColumns.some(c => c.name === 'rate_limit')) {
-      this.sql.exec(`ALTER TABLE endpoints ADD COLUMN rate_limit INTEGER NOT NULL DEFAULT 120`);
+      this.sql.exec(`ALTER TABLE endpoints ADD COLUMN rate_limit INTEGER NOT NULL DEFAULT 30`);
     }
   }
 
@@ -208,7 +209,7 @@ export class EndpointDO implements DurableObject {
       responseBody: dbEndpoint.response_body,
       statusCode: dbEndpoint.status_code,
       delay: dbEndpoint.delay_ms,
-      rateLimit: dbEndpoint.rate_limit ?? 120,
+      rateLimit: dbEndpoint.rate_limit ?? TIER_LIMITS.free.defaultEndpointRateLimit,
       createdAt: dbEndpoint.created_at,
       updatedAt: dbEndpoint.updated_at,
     };
@@ -301,7 +302,7 @@ export class EndpointDO implements DurableObject {
         body.response_body ?? '{}',
         body.status_code ?? 200,
         body.delay_ms ?? 0,
-        body.rate_limit ?? 120,
+        body.rate_limit ?? TIER_LIMITS.free.defaultEndpointRateLimit,
         now,
         now
       );
@@ -682,7 +683,7 @@ export class EndpointDO implements DurableObject {
     }
 
     // Check rate limit
-    const rateLimit = matchedEndpoint.rate_limit ?? 120;
+    const rateLimit = matchedEndpoint.rate_limit ?? TIER_LIMITS.free.defaultEndpointRateLimit;
     const { allowed, count } = await this.checkRateLimit(matchedEndpoint.id, rateLimit);
 
     if (!allowed) {
