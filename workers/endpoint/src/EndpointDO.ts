@@ -625,7 +625,21 @@ export class EndpointDO implements DurableObject {
     const key = getWindowKey(endpointId, RATE_LIMIT_WINDOW_MS);
     const count = (await this.state.storage.get<number>(key)) ?? 0;
 
+    console.log('[RateLimit] Check:', {
+      endpointId,
+      key,
+      currentCount: count,
+      limit,
+      windowMs: RATE_LIMIT_WINDOW_MS,
+    });
+
     if (count >= limit) {
+      console.log('[RateLimit] BLOCKED:', {
+        endpointId,
+        count,
+        limit,
+        reason: 'count >= limit',
+      });
       return { allowed: false, count };
     }
 
@@ -635,6 +649,14 @@ export class EndpointDO implements DurableObject {
     await this.state.storage.put(key, count + 1, {
       expirationTtl: ttlSeconds,
     } as DurableObjectPutOptions);
+
+    console.log('[RateLimit] ALLOWED:', {
+      endpointId,
+      newCount: count + 1,
+      limit,
+      remaining: limit - (count + 1),
+      ttlSeconds,
+    });
 
     return { allowed: true, count: count + 1 };
   }
@@ -684,9 +706,26 @@ export class EndpointDO implements DurableObject {
 
     // Check rate limit
     const rateLimit = matchedEndpoint.rate_limit ?? TIER_LIMITS.free.defaultEndpointRateLimit;
+
+    console.log('[RateLimit] Request:', {
+      requestPath: path,
+      method,
+      endpointId: matchedEndpoint.id,
+      endpointPath: matchedEndpoint.path,
+      configuredRateLimit: matchedEndpoint.rate_limit,
+      effectiveRateLimit: rateLimit,
+      rateLimitSource: matchedEndpoint.rate_limit !== null ? 'endpoint' : 'tier_default',
+    });
+
     const { allowed, count } = await this.checkRateLimit(matchedEndpoint.id, rateLimit);
 
     if (!allowed) {
+      console.log('[RateLimit] Returning 429:', {
+        endpointId: matchedEndpoint.id,
+        path,
+        count,
+        limit: rateLimit,
+      });
       const rateLimitData = getRateLimitExceededData(rateLimit, RATE_LIMIT_WINDOW_MS);
       return new Response(rateLimitData.body, {
         status: rateLimitData.status,
