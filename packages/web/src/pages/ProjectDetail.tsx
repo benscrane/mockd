@@ -19,6 +19,7 @@ export function ProjectDetail() {
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
+  const [editSubdomain, setEditSubdomain] = useState('');
   const [showDeleteProject, setShowDeleteProject] = useState(false);
 
   useEffect(() => {
@@ -59,15 +60,29 @@ export function ProjectDetail() {
   const handleEditProject = () => {
     if (!project) return;
     setEditName(project.name);
+    setEditSubdomain(project.subdomain);
     setIsEditing(true);
   };
 
   const handleSaveEdit = async () => {
-    if (!projectId || !editName.trim()) return;
+    if (!projectId || !editName.trim() || !editSubdomain.trim()) return;
 
     try {
-      const updated = await updateProject(projectId, { name: editName.trim() });
-      setProject(updated);
+      const updateData: { name?: string; subdomain?: string } = {};
+
+      // Only include changed fields
+      if (editName.trim() !== project?.name) {
+        updateData.name = editName.trim();
+      }
+      if (editSubdomain.trim() !== project?.subdomain) {
+        updateData.subdomain = editSubdomain.trim();
+      }
+
+      // Only call API if something changed
+      if (Object.keys(updateData).length > 0) {
+        const updated = await updateProject(projectId, updateData);
+        setProject(updated);
+      }
       setIsEditing(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update project');
@@ -77,6 +92,7 @@ export function ProjectDetail() {
   const handleCancelEdit = () => {
     setIsEditing(false);
     setEditName('');
+    setEditSubdomain('');
   };
 
   const handleDeleteProject = () => {
@@ -124,27 +140,51 @@ export function ProjectDetail() {
             <div className="flex items-center gap-4">
               <div>
                 {isEditing ? (
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      className="input input-bordered input-sm"
-                      autoFocus
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleSaveEdit();
-                        if (e.key === 'Escape') handleCancelEdit();
-                      }}
-                    />
-                    <button onClick={handleSaveEdit} className="btn btn-primary btn-sm">Save</button>
-                    <button onClick={handleCancelEdit} className="btn btn-ghost btn-sm">Cancel</button>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs text-base-content/70">Name</label>
+                        <input
+                          type="text"
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="input input-bordered input-sm"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveEdit();
+                            if (e.key === 'Escape') handleCancelEdit();
+                          }}
+                        />
+                      </div>
+                      {project.userId && (
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs text-base-content/70">Subdomain</label>
+                          <input
+                            type="text"
+                            value={editSubdomain}
+                            onChange={(e) => setEditSubdomain(e.target.value.toLowerCase())}
+                            className="input input-bordered input-sm"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleSaveEdit();
+                              if (e.key === 'Escape') handleCancelEdit();
+                            }}
+                          />
+                        </div>
+                      )}
+                      <div className="flex items-end gap-2 pb-0.5">
+                        <button onClick={handleSaveEdit} className="btn btn-primary btn-sm">Save</button>
+                        <button onClick={handleCancelEdit} className="btn btn-ghost btn-sm">Cancel</button>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <h1 className="text-xl font-bold text-base-content">{project.name}</h1>
                 )}
-                <p className="text-sm text-base-content/70">
-                  <code className="text-xs bg-base-200 px-1.5 py-0.5 rounded-sm">{project.subdomain}</code>
-                </p>
+                {!isEditing && (
+                  <p className="text-sm text-base-content/70">
+                    <code className="text-xs bg-base-200 px-1.5 py-0.5 rounded-sm">{project.subdomain}</code>
+                  </p>
+                )}
               </div>
             </div>
             <div className="dropdown dropdown-end">

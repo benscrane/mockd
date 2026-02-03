@@ -188,9 +188,59 @@ router.put('/projects/:id', async (c) => {
     return c.json({ error: 'Project not found' }, 404);
   }
 
-  const body = await c.req.json<{ name?: string }>();
+  const body = await c.req.json<{ name?: string; subdomain?: string }>();
   const now = new Date().toISOString();
 
+  // Handle subdomain update
+  if (body.subdomain !== undefined) {
+    const newSubdomain = body.subdomain.toLowerCase();
+
+    // Anonymous projects cannot change subdomain (it's their ID)
+    if (!project.user_id) {
+      return c.json({ error: 'Anonymous projects cannot change subdomain' }, 400);
+    }
+
+    // Validate subdomain format
+    if (!SUBDOMAIN_REGEX.test(newSubdomain)) {
+      return c.json({ error: 'Invalid subdomain format. Must be 3-63 lowercase alphanumeric characters with hyphens, cannot start or end with hyphen.' }, 400);
+    }
+
+    // Check if subdomain is actually changing
+    if (newSubdomain !== project.subdomain) {
+      // Check if new subdomain is already taken
+      const existing = await c.env.DB.prepare(
+        'SELECT id FROM projects WHERE subdomain = ? AND id != ?'
+      ).bind(newSubdomain, projectId).first();
+
+      if (existing) {
+        return c.json({ error: 'Subdomain already exists' }, 409);
+      }
+
+      // Check if project has endpoints - subdomain change requires DO migration
+      const doName = project.subdomain;
+      const stub = getDOStub(c.env, doName);
+      const endpointsResponse = await stub.fetch(
+        new Request('http://internal/__internal/endpoints', {
+          headers: getInternalAuthHeaders(c.env),
+        })
+      );
+      const endpointsData = await endpointsResponse.json() as { data: unknown[] };
+
+      if (endpointsData.data && endpointsData.data.length > 0) {
+        return c.json({
+          error: 'Cannot change subdomain for projects with existing endpoints. Delete all endpoints first.',
+          code: 'SUBDOMAIN_CHANGE_BLOCKED',
+        }, 400);
+      }
+
+      // Update subdomain
+      await c.env.DB.prepare(
+        'UPDATE projects SET subdomain = ?, updated_at = ? WHERE id = ?'
+      ).bind(newSubdomain, now, projectId).run();
+    }
+  }
+
+  // Handle name update
   if (body.name !== undefined) {
     await c.env.DB.prepare(
       'UPDATE projects SET name = ?, updated_at = ? WHERE id = ?'

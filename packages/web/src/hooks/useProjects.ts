@@ -18,7 +18,7 @@ interface UseProjectsReturn {
   getProject: (projectId: string) => Promise<Project>;
   createProject: (data: CreateProjectRequest) => Promise<Project>;
   createAnonymousProject: () => Promise<Project>;
-  updateProject: (projectId: string, data: { name?: string }) => Promise<Project>;
+  updateProject: (projectId: string, data: { name?: string; subdomain?: string }) => Promise<Project>;
   deleteProject: (projectId: string) => Promise<void>;
   clearProjects: () => void;
 }
@@ -166,7 +166,7 @@ export function useProjects(): UseProjectsReturn {
     return newProject;
   }, []);
 
-  const updateProject = useCallback(async (projectId: string, data: { name?: string }): Promise<Project> => {
+  const updateProject = useCallback(async (projectId: string, data: { name?: string; subdomain?: string }): Promise<Project> => {
     // Store previous state for rollback
     const previousProjects = projects;
 
