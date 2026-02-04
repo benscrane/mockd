@@ -128,7 +128,7 @@ export class EndpointDO implements DurableObject {
         path_params TEXT,
         response_status INTEGER,
         response_time_ms INTEGER,
-        FOREIGN KEY (endpoint_id) REFERENCES endpoints(id)
+        FOREIGN KEY (endpoint_id) REFERENCES endpoints(id) ON DELETE CASCADE
       );
 
       CREATE TABLE IF NOT EXISTS mock_rules (
