@@ -8,6 +8,8 @@ export const authRouter = new Hono<{ Bindings: Env }>();
 
 // Session duration: 30 days
 const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
+// API token duration: 90 days (longer for mobile convenience)
+const TOKEN_DURATION_MS = 90 * 24 * 60 * 60 * 1000;
 
 // Rate limiting for login attempts
 interface RateLimitResult {
@@ -140,6 +142,64 @@ function generateSessionId(): string {
   return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// Generate API token (used by mobile apps)
+function generateApiToken(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return 'mck_' + Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Hash API token for storage (we only store the hash, not the actual token)
+async function hashToken(token: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(token);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = new Uint8Array(hashBuffer);
+  return Array.from(hashArray, b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Create an API token for a user
+async function createApiToken(
+  db: D1Database,
+  userId: string,
+  deviceInfo?: string
+): Promise<string> {
+  const token = generateApiToken();
+  const tokenHash = await hashToken(token);
+  const id = crypto.randomUUID();
+  const now = new Date().toISOString();
+  const expiresAt = new Date(Date.now() + TOKEN_DURATION_MS).toISOString();
+
+  await db.prepare(
+    'INSERT INTO api_tokens (id, user_id, token_hash, expires_at, created_at, device_info) VALUES (?, ?, ?, ?, ?, ?)'
+  ).bind(id, userId, tokenHash, expiresAt, now, deviceInfo ?? null).run();
+
+  return token;
+}
+
+// Get user by API token
+async function getUserByToken(db: D1Database, token: string): Promise<DbUser | null> {
+  const tokenHash = await hashToken(token);
+
+  const tokenRecord = await db.prepare(
+    'SELECT * FROM api_tokens WHERE token_hash = ? AND expires_at > datetime("now")'
+  ).bind(tokenHash).first<{ id: string; user_id: string }>();
+
+  if (!tokenRecord) return null;
+
+  // Update last_used_at
+  await db.prepare(
+    'UPDATE api_tokens SET last_used_at = datetime("now") WHERE id = ?'
+  ).bind(tokenRecord.id).run();
+
+  return db.prepare('SELECT * FROM users WHERE id = ?').bind(tokenRecord.user_id).first<DbUser>();
+}
+
+// Delete API token (for logout)
+async function deleteApiToken(db: D1Database, token: string): Promise<void> {
+  const tokenHash = await hashToken(token);
+  await db.prepare('DELETE FROM api_tokens WHERE token_hash = ?').bind(tokenHash).run();
+}
+
 // Transform DbUser to API User type
 function mapDbUserToUser(dbUser: DbUser): User {
   return {
@@ -209,7 +269,17 @@ authRouter.post('/register', async (c) => {
     'INSERT INTO sessions (id, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)'
   ).bind(sessionId, userId, expiresAt, now).run();
 
-  // Set session cookie
+  const user = await c.env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(userId).first<DbUser>();
+
+  // Check if client wants a token instead of cookie (for mobile apps)
+  const returnToken = c.req.header('X-Return-Token') === 'true';
+
+  if (returnToken) {
+    const token = await createApiToken(c.env.DB, userId, c.req.header('User-Agent'));
+    return c.json({ user: mapDbUserToUser(user!), token }, 201);
+  }
+
+  // Set session cookie for web clients
   setCookie(c, 'mockd_session', sessionId, {
     httpOnly: true,
     secure: c.env.ENVIRONMENT !== 'development',
@@ -218,8 +288,6 @@ authRouter.post('/register', async (c) => {
     maxAge: SESSION_DURATION_MS / 1000,
     ...(c.env.COOKIE_DOMAIN && { domain: c.env.COOKIE_DOMAIN }),
   });
-
-  const user = await c.env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(userId).first<DbUser>();
 
   return c.json({ user: mapDbUserToUser(user!) }, 201);
 });
@@ -271,7 +339,15 @@ authRouter.post('/login', async (c) => {
     'INSERT INTO sessions (id, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)'
   ).bind(sessionId, user.id, expiresAt, now).run();
 
-  // Set session cookie
+  // Check if client wants a token instead of cookie (for mobile apps)
+  const returnToken = c.req.header('X-Return-Token') === 'true';
+
+  if (returnToken) {
+    const token = await createApiToken(c.env.DB, user.id, c.req.header('User-Agent'));
+    return c.json({ user: mapDbUserToUser(user), token });
+  }
+
+  // Set session cookie for web clients
   setCookie(c, 'mockd_session', sessionId, {
     httpOnly: true,
     secure: c.env.ENVIRONMENT !== 'development',
@@ -286,6 +362,15 @@ authRouter.post('/login', async (c) => {
 
 // Logout
 authRouter.post('/logout', async (c) => {
+  // Check for Bearer token first (mobile apps)
+  const authHeader = c.req.header('Authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    await deleteApiToken(c.env.DB, token);
+    return c.json({ success: true });
+  }
+
+  // Fall back to session cookie (web apps)
   const sessionId = getCookie(c, 'mockd_session');
 
   if (sessionId) {
@@ -304,6 +389,20 @@ authRouter.post('/logout', async (c) => {
 
 // Get current user
 authRouter.get('/me', async (c) => {
+  // Check for Bearer token first (mobile apps)
+  const authHeader = c.req.header('Authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    const user = await getUserByToken(c.env.DB, token);
+
+    if (!user) {
+      return c.json({ error: 'Invalid or expired token' }, 401);
+    }
+
+    return c.json({ user: mapDbUserToUser(user) });
+  }
+
+  // Fall back to session cookie (web apps)
   const sessionId = getCookie(c, 'mockd_session');
 
   if (!sessionId) {
@@ -325,4 +424,4 @@ authRouter.get('/me', async (c) => {
 });
 
 // Export helper for middleware
-export { getUserBySession, mapDbUserToUser };
+export { getUserBySession, getUserByToken, mapDbUserToUser };

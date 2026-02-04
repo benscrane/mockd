@@ -71,4 +71,15 @@ export interface DbOAuthState {
   code_verifier: string | null;
   expires_at: string;
   created_at: string;
+  is_mobile: number; // SQLite uses 0/1 for boolean
+}
+
+export interface DbApiToken {
+  id: string;
+  user_id: string;
+  token_hash: string;
+  expires_at: string;
+  created_at: string;
+  last_used_at: string | null;
+  device_info: string | null;
 }

@@ -11,6 +11,8 @@ export const oauthRouter = new Hono<{ Bindings: Env }>();
 const STATE_EXPIRY_MS = 5 * 60 * 1000;
 // Session duration: 30 days
 const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
+// API token duration: 90 days (for mobile apps)
+const TOKEN_DURATION_MS = 90 * 24 * 60 * 60 * 1000;
 
 // Generate random state/verifier
 function generateRandomString(length: number): string {
@@ -33,6 +35,40 @@ async function generateCodeChallenge(verifier: string): Promise<string> {
 function generateSessionId(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
   return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Generate API token (for mobile apps)
+function generateApiToken(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return 'mck_' + Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Hash API token for storage
+async function hashToken(token: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(token);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = new Uint8Array(hashBuffer);
+  return Array.from(hashArray, b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Create an API token for a user
+async function createApiToken(
+  db: D1Database,
+  userId: string,
+  deviceInfo?: string
+): Promise<string> {
+  const token = generateApiToken();
+  const tokenHash = await hashToken(token);
+  const id = crypto.randomUUID();
+  const now = new Date().toISOString();
+  const expiresAt = new Date(Date.now() + TOKEN_DURATION_MS).toISOString();
+
+  await db.prepare(
+    'INSERT INTO api_tokens (id, user_id, token_hash, expires_at, created_at, device_info) VALUES (?, ?, ?, ?, ?, ?)'
+  ).bind(id, userId, tokenHash, expiresAt, now, deviceInfo ?? null).run();
+
+  return token;
 }
 
 // GitHub OAuth: initiate
@@ -201,7 +237,14 @@ oauthRouter.get('/github/callback', async (c) => {
     ).bind(connectionId, user!.id, 'github', String(githubUser.id), email, now, now).run();
   }
 
-  // Create session
+  // Check if this is a mobile OAuth flow
+  if (oauthState.is_mobile) {
+    // For mobile, create an API token and redirect to the app with the token
+    const apiToken = await createApiToken(c.env.DB, user!.id, 'mobile-oauth');
+    return c.redirect(`mockd://auth/callback?token=${apiToken}`);
+  }
+
+  // Create session for web
   const sessionId = generateSessionId();
   const sessionExpiresAt = new Date(Date.now() + SESSION_DURATION_MS).toISOString();
 
@@ -209,7 +252,7 @@ oauthRouter.get('/github/callback', async (c) => {
     'INSERT INTO sessions (id, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)'
   ).bind(sessionId, user!.id, sessionExpiresAt, now).run();
 
-  // Set session cookie
+  // Set session cookie for web
   setCookie(c, 'mockd_session', sessionId, {
     httpOnly: true,
     secure: c.env.ENVIRONMENT !== 'development',
@@ -221,4 +264,34 @@ oauthRouter.get('/github/callback', async (c) => {
 
   // Redirect to app
   return c.redirect(c.env.APP_URL);
+});
+
+// GitHub OAuth for mobile: initiate flow and return auth URL
+oauthRouter.post('/github/mobile', async (c) => {
+  const state = generateRandomString(32);
+  const codeVerifier = generateRandomString(32);
+  const codeChallenge = await generateCodeChallenge(codeVerifier);
+
+  const id = generateUserId();
+  const now = new Date().toISOString();
+  const expiresAt = new Date(Date.now() + STATE_EXPIRY_MS).toISOString();
+
+  // Store state with mobile flag
+  await c.env.DB.prepare(
+    'INSERT INTO oauth_states (id, state, provider, code_verifier, expires_at, created_at, is_mobile) VALUES (?, ?, ?, ?, ?, ?, 1)'
+  ).bind(id, state, 'github', codeVerifier, expiresAt, now).run();
+
+  // Build GitHub OAuth URL
+  const params = new URLSearchParams({
+    client_id: c.env.GITHUB_CLIENT_ID,
+    redirect_uri: `${c.env.API_URL}/api/auth/github/callback`,
+    scope: 'user:email',
+    state: state,
+    code_challenge: codeChallenge,
+    code_challenge_method: 'S256',
+  });
+
+  const authUrl = `https://github.com/login/oauth/authorize?${params.toString()}`;
+
+  return c.json({ authUrl });
 });
