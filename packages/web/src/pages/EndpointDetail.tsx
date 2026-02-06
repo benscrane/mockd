@@ -4,7 +4,7 @@ import type { Project, Endpoint, UpdateEndpointRequest } from '@mockd/shared';
 import { useProjects, useEndpoints, useWebSocket } from '../hooks';
 import { RequestList } from '../components/request';
 import { RulesPanel } from '../components/rules';
-import { EndpointForm } from '../components/endpoint';
+import { EndpointForm, QuickTestPanel } from '../components/endpoint';
 import { Breadcrumbs, CopyButton, ConfirmDialog } from '../components/common';
 import { getMockApiSubdomainUrl, getProjectDoName } from '../config';
 
@@ -219,7 +219,9 @@ export function EndpointDetail() {
             />
           </div>
 
-          <div>
+          <div className="space-y-6">
+            <QuickTestPanel endpointUrl={endpointUrl} />
+
             <RulesPanel
               projectId={projectId!}
               endpointId={endpointId!}
