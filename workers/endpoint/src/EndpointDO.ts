@@ -246,8 +246,31 @@ export class EndpointDO implements DurableObject {
       return this.handleInternalRequest(request);
     }
 
+    // Handle CORS preflight for mock endpoints
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        status: 204,
+        headers: this.getCorsHeaders(request),
+      });
+    }
+
     // Handle mock endpoint requests
-    return this.handleMockRequest(request);
+    const response = await this.handleMockRequest(request);
+    const corsHeaders = this.getCorsHeaders(request);
+    for (const [key, value] of Object.entries(corsHeaders)) {
+      response.headers.set(key, value);
+    }
+    return response;
+  }
+
+  private getCorsHeaders(request: Request): Record<string, string> {
+    const origin = request.headers.get('Origin') || '*';
+    return {
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS',
+      'Access-Control-Allow-Headers': request.headers.get('Access-Control-Request-Headers') || 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400',
+    };
   }
 
   private handleWebSocket(request: Request): Response {
