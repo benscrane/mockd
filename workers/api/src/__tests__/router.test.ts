@@ -850,4 +850,59 @@ describe('API Router', () => {
       });
     });
   });
+
+  describe('Tier Config Push', () => {
+    it('should push free tier config when creating an anonymous project', async () => {
+      const request = makeRequest('/api/projects/anonymous', {
+        method: 'POST',
+        body: { name: 'Anon Project' },
+      });
+
+      const response = await app.fetch(request, env);
+      expect(response.status).toBe(201);
+
+      const config = (env.ENDPOINT_DO as unknown as { _config: Map<string, unknown> })._config;
+      expect(config.get('tier')).toBe('free');
+    });
+
+    it('should push user tier config when creating an authenticated project', async () => {
+      const user = createTestUser(store, { id: 'user_pro', tier: 'pro', email: 'pro@example.com' });
+      const session = createTestSession(store, user.id, { id: 'session_pro' });
+
+      const request = makeRequest('/api/projects', {
+        method: 'POST',
+        body: { name: 'Pro Project', subdomain: 'pro-project' },
+        cookie: `mockd_session=${session.id}`,
+      });
+
+      const response = await app.fetch(request, env);
+      expect(response.status).toBe(201);
+
+      const config = (env.ENDPOINT_DO as unknown as { _config: Map<string, unknown> })._config;
+      expect(config.get('tier')).toBe('pro');
+    });
+
+    it('should push claiming user tier config when claiming a project', async () => {
+      const user = createTestUser(store, { id: 'user_team', tier: 'team', email: 'team@example.com' });
+      const session = createTestSession(store, user.id, { id: 'session_team' });
+      createTestProject(store, {
+        id: 'proj_anon',
+        user_id: null,
+        name: 'Anon Project',
+        subdomain: 'proj_anon',
+      });
+
+      const request = makeRequest('/api/projects/proj_anon/claim', {
+        method: 'POST',
+        body: { name: 'Claimed Project', subdomain: 'claimed-project' },
+        cookie: `mockd_session=${session.id}`,
+      });
+
+      const response = await app.fetch(request, env);
+      expect(response.status).toBe(200);
+
+      const config = (env.ENDPOINT_DO as unknown as { _config: Map<string, unknown> })._config;
+      expect(config.get('tier')).toBe('team');
+    });
+  });
 });

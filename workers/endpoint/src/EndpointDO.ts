@@ -11,7 +11,7 @@ import {
   getRateLimitExceededData,
   RATE_LIMIT_WINDOW_MS,
 } from '@mockd/shared/utils';
-import { TIER_LIMITS } from '@mockd/shared/constants';
+import { TIER_LIMITS, type Tier } from '@mockd/shared/constants';
 import type { RequestContext, TemplateContext } from '@mockd/shared/utils';
 import type {
   ClientMessage,
@@ -743,6 +743,39 @@ export class EndpointDO implements DurableObject {
       });
     }
 
+    // PUT /__internal/config - Update project config (e.g., max request size based on tier)
+    if (path === '/__internal/config' && request.method === 'PUT') {
+      const body = await request.json() as { tier?: Tier; maxRequestSize?: number };
+
+      if (body.tier) {
+        const tierLimits = TIER_LIMITS[body.tier];
+        if (tierLimits) {
+          await this.state.storage.put('config:maxRequestSize', tierLimits.maxRequestSize);
+        }
+      } else if (body.maxRequestSize !== undefined) {
+        await this.state.storage.put('config:maxRequestSize', body.maxRequestSize);
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // GET /__internal/config - Get project config
+    if (path === '/__internal/config' && request.method === 'GET') {
+      const maxRequestSize = await this.state.storage.get<number>('config:maxRequestSize');
+
+      return new Response(JSON.stringify({
+        data: {
+          maxRequestSize: maxRequestSize ?? TIER_LIMITS.free.maxRequestSize,
+        },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     return new Response(JSON.stringify({ error: 'Not found' }), {
       status: 404,
       headers: { 'Content-Type': 'application/json' },
@@ -802,8 +835,37 @@ export class EndpointDO implements DurableObject {
     const method = request.method;
     const path = normalizePath(url.pathname);
 
+    // Check Content-Length header early to reject obviously oversized requests
+    const maxRequestSize = (await this.state.storage.get<number>('config:maxRequestSize'))
+      ?? TIER_LIMITS.free.maxRequestSize;
+    const contentLength = parseInt(request.headers.get('Content-Length') || '0', 10);
+    if (contentLength > maxRequestSize) {
+      return new Response(JSON.stringify({
+        error: 'Request body too large',
+        code: 'REQUEST_TOO_LARGE',
+        maxSize: maxRequestSize,
+        size: contentLength,
+      }), {
+        status: 413,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     // Read request body
     const body = await request.text();
+
+    // Check actual body size (Content-Length may be absent or inaccurate)
+    if (body.length > maxRequestSize) {
+      return new Response(JSON.stringify({
+        error: 'Request body too large',
+        code: 'REQUEST_TOO_LARGE',
+        maxSize: maxRequestSize,
+        size: body.length,
+      }), {
+        status: 413,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
 
     // Build headers object for matching
     const headersObj: Record<string, string> = {};
