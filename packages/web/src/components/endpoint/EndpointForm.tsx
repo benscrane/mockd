@@ -73,7 +73,21 @@ export function EndpointForm({ endpoint, onSubmit, onCancel, isLoading }: Endpoi
 
     try {
       if (isEdit) {
-        const data: UpdateEndpointRequest = { responseBody, statusCode: statusCodeNum, delay: delayNum, rateLimit: rateLimitNum };
+        // Only include fields that changed from the original endpoint values
+        // to avoid re-validating unchanged fields against tier limits
+        const data: UpdateEndpointRequest = {};
+        if (responseBody !== (endpoint.responseBody ?? '')) {
+          data.responseBody = responseBody;
+        }
+        if (statusCodeNum !== endpoint.statusCode) {
+          data.statusCode = statusCodeNum;
+        }
+        if (delayNum !== endpoint.delay) {
+          data.delay = delayNum;
+        }
+        if (rateLimitNum !== endpoint.rateLimit) {
+          data.rateLimit = rateLimitNum;
+        }
         await (onSubmit as (data: UpdateEndpointRequest) => Promise<void>)(data);
       } else {
         const data: CreateEndpointRequest = { path: path.trim(), responseBody, statusCode: statusCodeNum, delay: delayNum, rateLimit: rateLimitNum };
