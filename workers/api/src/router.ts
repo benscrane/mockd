@@ -77,6 +77,18 @@ router.get('/projects', async (c) => {
   return c.json({ data: projects });
 });
 
+// Helper: Push tier config (max request size) to a project's Durable Object
+async function pushTierConfig(env: Env, doName: string, tier: Tier): Promise<void> {
+  const stub = getDOStub(env, doName);
+  await stub.fetch(
+    new Request('http://internal/__internal/config', {
+      method: 'PUT',
+      headers: getInternalAuthHeaders(env, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ tier }),
+    })
+  );
+}
+
 // Create project (requires authentication)
 router.post('/projects', requireAuth, async (c) => {
   const userId = c.get('userId')!;
@@ -124,6 +136,9 @@ router.post('/projects', requireAuth, async (c) => {
     throw error;
   }
 
+  // Push tier config to the project's Durable Object
+  await pushTierConfig(c.env, subdomain, userTier);
+
   const project = await getProjectById(c.env.DB, id);
   if (!project) {
     return c.json({ error: 'Failed to create project' }, 500);
@@ -144,6 +159,9 @@ router.post('/projects/anonymous', async (c) => {
   await c.env.DB.prepare(
     'INSERT INTO projects (id, user_id, name, subdomain, created_at, updated_at) VALUES (?, NULL, ?, ?, ?, ?)'
   ).bind(id, name, id, now, now).run();
+
+  // Push free tier config to the project's Durable Object
+  await pushTierConfig(c.env, id, 'free');
 
   const project = await getProjectById(c.env.DB, id);
   if (!project) {
@@ -278,6 +296,9 @@ router.post('/projects/:id/claim', requireAuth, async (c) => {
     }
     throw error;
   }
+
+  // Push the claiming user's tier config to the project's Durable Object
+  await pushTierConfig(c.env, subdomain, userTier);
 
   const updatedProject = await getProjectById(c.env.DB, projectId);
   if (!updatedProject) {

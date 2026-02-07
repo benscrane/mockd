@@ -221,6 +221,7 @@ function createMockStatement(query: string, store: MockDataStore): D1PreparedSta
 export function createMockDurableObject(): DurableObjectNamespace {
   const endpoints = new Map<string, { id: string; path: string; response_body: string; status_code: number; delay_ms: number }>();
   const rules = new Map<string, Record<string, unknown>>();
+  const config = new Map<string, unknown>();
   let endpointCounter = 0;
   let ruleCounter = 0;
 
@@ -228,6 +229,26 @@ export function createMockDurableObject(): DurableObjectNamespace {
     fetch: async (request: Request) => {
       const url = new URL(request.url);
       const path = url.pathname;
+
+      // PUT config
+      if (path === '/__internal/config' && request.method === 'PUT') {
+        const body = await request.json() as Record<string, unknown>;
+        for (const [key, value] of Object.entries(body)) {
+          config.set(key, value);
+        }
+        return new Response(JSON.stringify({ success: true }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      // GET config
+      if (path === '/__internal/config' && request.method === 'GET') {
+        return new Response(JSON.stringify({ data: Object.fromEntries(config) }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
 
       // GET endpoints
       if (path === '/__internal/endpoints' && request.method === 'GET') {
