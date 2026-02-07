@@ -375,14 +375,17 @@ export function createMockDurableObject(): DurableObjectNamespace {
     },
   } as unknown as DurableObjectStub;
 
-  return {
+  const ns = {
     idFromName: () => ({ toString: () => 'mock-do-id' }) as DurableObjectId,
     idFromString: () => ({ toString: () => 'mock-do-id' }) as DurableObjectId,
     newUniqueId: () => ({ toString: () => 'mock-do-id' }) as DurableObjectId,
     get: () => mockStub,
     getByName: () => mockStub,
     jurisdiction: () => ({}) as DurableObjectNamespace,
+    _config: config,
   } as unknown as DurableObjectNamespace;
+
+  return ns;
 }
 
 // Create mock environment
