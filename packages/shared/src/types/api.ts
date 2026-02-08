@@ -8,6 +8,7 @@ export interface Endpoint {
   id: string;
   projectId: string;
   path: string;
+  contentType: string;
   responseBody: string;
   statusCode: number;
   delay: number;
@@ -27,6 +28,7 @@ export interface Project {
 
 export interface CreateEndpointRequest {
   path: string;
+  contentType?: string;
   responseBody: string;
   statusCode?: number;
   delay?: number;
@@ -34,6 +36,7 @@ export interface CreateEndpointRequest {
 }
 
 export interface UpdateEndpointRequest {
+  contentType?: string;
   responseBody?: string;
   statusCode?: number;
   delay?: number;

@@ -27,6 +27,7 @@ export interface DbEndpoint {
   id: string;
   project_id: string;
   path: string;
+  content_type: string;
   response_body: string;
   status_code: number;
   delay_ms: number;

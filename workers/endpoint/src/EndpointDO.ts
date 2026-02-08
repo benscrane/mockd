@@ -5,6 +5,7 @@ import {
   generateRuleId,
   matchRule,
   processTemplate,
+  processHeaders,
   calculatePathSpecificity,
   getWindowKey,
   calculateRateLimitHeaders,
@@ -51,6 +52,7 @@ interface DbEndpoint {
   [key: string]: string | number | null;
   id: string;
   path: string;
+  content_type: string;
   response_body: string;
   status_code: number;
   delay_ms: number;
@@ -63,6 +65,7 @@ interface ApiEndpoint {
   id: string;
   projectId: string;
   path: string;
+  contentType: string;
   responseBody: string;
   statusCode: number;
   delay: number;
@@ -175,6 +178,10 @@ export class EndpointDO implements DurableObject {
     if (!endpointColumns.some(c => c.name === 'rate_limit')) {
       this.sql.exec(`ALTER TABLE endpoints ADD COLUMN rate_limit INTEGER NOT NULL DEFAULT 30`);
     }
+
+    if (!endpointColumns.some(c => c.name === 'content_type')) {
+      this.sql.exec(`ALTER TABLE endpoints ADD COLUMN content_type TEXT NOT NULL DEFAULT 'application/json'`);
+    }
   }
 
   private getRulesForEndpoint(endpointId: string): MockRule[] {
@@ -224,6 +231,7 @@ export class EndpointDO implements DurableObject {
       id: dbEndpoint.id,
       projectId,
       path: dbEndpoint.path,
+      contentType: dbEndpoint.content_type ?? 'application/json',
       responseBody: dbEndpoint.response_body,
       statusCode: dbEndpoint.status_code,
       delay: dbEndpoint.delay_ms,
@@ -311,7 +319,7 @@ export class EndpointDO implements DurableObject {
 
     // POST /__internal/endpoints - Create a new endpoint
     if (path === '/__internal/endpoints' && request.method === 'POST') {
-      const body = await request.json() as { path: string; response_body?: string; status_code?: number; delay_ms?: number; rate_limit?: number };
+      const body = await request.json() as { path: string; content_type?: string; response_body?: string; status_code?: number; delay_ms?: number; rate_limit?: number };
 
       if (!body.path) {
         return new Response(JSON.stringify({ error: 'path is required' }), {
@@ -336,10 +344,11 @@ export class EndpointDO implements DurableObject {
       const now = new Date().toISOString();
 
       this.sql.exec(
-        `INSERT INTO endpoints (id, path, response_body, status_code, delay_ms, rate_limit, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO endpoints (id, path, content_type, response_body, status_code, delay_ms, rate_limit, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         id,
         body.path,
+        body.content_type ?? 'application/json',
         body.response_body ?? '{}',
         body.status_code ?? 200,
         body.delay_ms ?? 0,
@@ -362,7 +371,7 @@ export class EndpointDO implements DurableObject {
     const endpointUpdateMatch = path.match(/^\/__internal\/endpoints\/([^/]+)$/);
     if (endpointUpdateMatch && request.method === 'PUT') {
       const endpointId = endpointUpdateMatch[1];
-      const body = await request.json() as { response_body?: string; status_code?: number; delay_ms?: number; rate_limit?: number };
+      const body = await request.json() as { content_type?: string; response_body?: string; status_code?: number; delay_ms?: number; rate_limit?: number };
 
       // Check if endpoint exists
       const existing = this.sql
@@ -379,6 +388,10 @@ export class EndpointDO implements DurableObject {
       const updates: string[] = [];
       const params: (string | number)[] = [];
 
+      if (body.content_type !== undefined) {
+        updates.push('content_type = ?');
+        params.push(body.content_type);
+      }
       if (body.response_body !== undefined) {
         updates.push('response_body = ?');
         params.push(body.response_body);
@@ -942,10 +955,11 @@ export class EndpointDO implements DurableObject {
     const ruleMatch = matchRule(rules, requestContext, endpointPathParams);
 
     // Determine response config (from rule or endpoint defaults)
+    const endpointContentType = matchedEndpoint.content_type ?? 'application/json';
     let responseStatus: number;
     let responseBody: string;
     let responseDelayMs: number;
-    let responseHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+    let responseHeaders: Record<string, string> = { 'Content-Type': endpointContentType };
     let matchedRuleId: string | null = null;
     let matchedRuleName: string | null = null;
     let pathParams: Record<string, string> = endpointPathParams;
@@ -972,7 +986,9 @@ export class EndpointDO implements DurableObject {
       pathParams = rulePathParams;
 
       if (rule.responseHeaders) {
-        responseHeaders = { ...responseHeaders, ...rule.responseHeaders };
+        // Process template variables in response header values
+        const templatedHeaders = processHeaders(rule.responseHeaders, buildTemplateContext(rulePathParams));
+        responseHeaders = { ...responseHeaders, ...templatedHeaders };
       }
     } else {
       responseStatus = matchedEndpoint.status_code;
