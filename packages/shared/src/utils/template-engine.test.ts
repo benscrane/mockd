@@ -1,10 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import {
   processTemplate,
+  processHeaders,
   stripTemplatesForValidation,
   parseFormBody,
   isFormUrlEncoded,
   getContentTypeFromHeaders,
+  COMMON_CONTENT_TYPES,
   type TemplateContext,
 } from './template-engine';
 
@@ -452,5 +454,71 @@ describe('stripTemplatesForValidation', () => {
     const input = '{"msg": "say \\"hi\\" {{$randomName}}"}';
     const result = stripTemplatesForValidation(input);
     expect(result).toContain('__tpl__');
+  });
+});
+
+describe('processHeaders', () => {
+  it('should process template variables in header values', () => {
+    const ctx = makeContext({
+      request: { method: 'POST', path: '/test', headers: { 'X-Request-ID': 'req-123' }, query: {}, body: null },
+    });
+    const headers = {
+      'X-Echo-ID': '{{request.header.X-Request-ID}}',
+      'X-Method': '{{request.method}}',
+      'X-Static': 'no-template',
+    };
+    const result = processHeaders(headers, ctx);
+    expect(result['X-Echo-ID']).toBe('req-123');
+    expect(result['X-Method']).toBe('POST');
+    expect(result['X-Static']).toBe('no-template');
+  });
+
+  it('should process built-in generators in header values', () => {
+    const ctx = makeContext();
+    const headers = { 'X-Request-ID': '{{$uuid}}' };
+    const result = processHeaders(headers, ctx);
+    expect(result['X-Request-ID']).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+  });
+
+  it('should handle empty headers object', () => {
+    const ctx = makeContext();
+    const result = processHeaders({}, ctx);
+    expect(result).toEqual({});
+  });
+
+  it('should process path params in header values', () => {
+    const ctx = makeContext({ pathParams: { id: '42' } });
+    const headers = { 'X-Resource-ID': '{{id}}' };
+    const result = processHeaders(headers, ctx);
+    expect(result['X-Resource-ID']).toBe('42');
+  });
+
+  it('should leave unknown template variables as-is', () => {
+    const ctx = makeContext();
+    const headers = { 'X-Unknown': '{{unknown}}' };
+    const result = processHeaders(headers, ctx);
+    expect(result['X-Unknown']).toBe('{{unknown}}');
+  });
+});
+
+describe('COMMON_CONTENT_TYPES', () => {
+  it('should include application/json', () => {
+    expect(COMMON_CONTENT_TYPES).toContain('application/json');
+  });
+
+  it('should include text/plain', () => {
+    expect(COMMON_CONTENT_TYPES).toContain('text/plain');
+  });
+
+  it('should include text/html', () => {
+    expect(COMMON_CONTENT_TYPES).toContain('text/html');
+  });
+
+  it('should include application/xml', () => {
+    expect(COMMON_CONTENT_TYPES).toContain('application/xml');
+  });
+
+  it('should include text/csv', () => {
+    expect(COMMON_CONTENT_TYPES).toContain('text/csv');
   });
 });

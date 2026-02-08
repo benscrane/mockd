@@ -38,6 +38,7 @@ export interface ValidationResult {
 
 interface EndpointInput {
   path?: string;
+  contentType?: string;
   responseBody?: string;
   statusCode?: number;
   delay?: number;

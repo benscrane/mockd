@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { CreateEndpointRequest, UpdateEndpointRequest, Endpoint } from '@mockd/shared';
 import { TIER_LIMITS } from '@mockd/shared';
-import { stripTemplatesForValidation } from '@mockd/shared/utils';
+import { stripTemplatesForValidation, COMMON_CONTENT_TYPES } from '@mockd/shared/utils';
 import { JsonEditor, TemplateVariableRef } from '../common';
 
 interface EndpointFormCreateProps {
@@ -24,6 +24,13 @@ export function EndpointForm({ endpoint, onSubmit, onCancel, isLoading }: Endpoi
   const isEdit = !!endpoint;
 
   const [path, setPath] = useState(endpoint?.path || '/');
+  const [contentType, setContentType] = useState(endpoint?.contentType || 'application/json');
+  const [customContentType, setCustomContentType] = useState(
+    endpoint?.contentType && !COMMON_CONTENT_TYPES.includes(endpoint.contentType as typeof COMMON_CONTENT_TYPES[number])
+      ? endpoint.contentType
+      : ''
+  );
+  const isCustomContentType = !COMMON_CONTENT_TYPES.includes(contentType as typeof COMMON_CONTENT_TYPES[number]);
   const [responseBody, setResponseBody] = useState(
     endpoint?.responseBody || '{\n  "message": "Hello, World!"\n}'
   );
@@ -64,20 +71,29 @@ export function EndpointForm({ endpoint, onSubmit, onCancel, isLoading }: Endpoi
       return;
     }
 
-    try {
-      // Validate JSON (strip template variables first so {{...}} tokens don't break parsing)
-      JSON.parse(stripTemplatesForValidation(responseBody));
-    } catch {
-      setError('Response body must be valid JSON (template variables like {{$uuid}} are allowed inside values)');
+    const effectiveContentType = isCustomContentType ? customContentType : contentType;
+
+    if (!effectiveContentType.trim()) {
+      setError('Content type is required');
       return;
+    }
+
+    // Only validate JSON structure when content type is application/json
+    if (effectiveContentType === 'application/json') {
+      try {
+        JSON.parse(stripTemplatesForValidation(responseBody));
+      } catch {
+        setError('Response body must be valid JSON (template variables like {{$uuid}} are allowed inside values)');
+        return;
+      }
     }
 
     try {
       if (isEdit) {
-        const data: UpdateEndpointRequest = { responseBody, statusCode: statusCodeNum, delay: delayNum, rateLimit: rateLimitNum };
+        const data: UpdateEndpointRequest = { contentType: effectiveContentType, responseBody, statusCode: statusCodeNum, delay: delayNum, rateLimit: rateLimitNum };
         await (onSubmit as (data: UpdateEndpointRequest) => Promise<void>)(data);
       } else {
-        const data: CreateEndpointRequest = { path: path.trim(), responseBody, statusCode: statusCodeNum, delay: delayNum, rateLimit: rateLimitNum };
+        const data: CreateEndpointRequest = { path: path.trim(), contentType: effectiveContentType, responseBody, statusCode: statusCodeNum, delay: delayNum, rateLimit: rateLimitNum };
         await (onSubmit as (data: CreateEndpointRequest) => Promise<void>)(data);
       }
     } catch (err) {
@@ -112,6 +128,45 @@ export function EndpointForm({ endpoint, onSubmit, onCancel, isLoading }: Endpoi
           </label>
         </div>
       )}
+
+      <div className="form-control">
+        <label htmlFor="contentType" className="label">
+          <span className="label-text">Content Type</span>
+        </label>
+        <div className="flex gap-2">
+          <select
+            id="contentType"
+            value={isCustomContentType ? '__custom__' : contentType}
+            onChange={(e) => {
+              if (e.target.value === '__custom__') {
+                setContentType(customContentType || '');
+              } else {
+                setContentType(e.target.value);
+              }
+            }}
+            className="select select-bordered flex-1"
+            disabled={isLoading}
+          >
+            {COMMON_CONTENT_TYPES.map((ct) => (
+              <option key={ct} value={ct}>{ct}</option>
+            ))}
+            <option value="__custom__">Custom...</option>
+          </select>
+          {isCustomContentType && (
+            <input
+              type="text"
+              value={customContentType}
+              onChange={(e) => {
+                setCustomContentType(e.target.value);
+                setContentType(e.target.value);
+              }}
+              placeholder="e.g. application/pdf"
+              className="input input-bordered flex-1 font-mono"
+              disabled={isLoading}
+            />
+          )}
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="form-control">
@@ -163,16 +218,27 @@ export function EndpointForm({ endpoint, onSubmit, onCancel, isLoading }: Endpoi
 
       <div className="form-control">
         <label htmlFor="responseBody" className="label">
-          <span className="label-text">Response Body (JSON)</span>
+          <span className="label-text">Response Body{contentType === 'application/json' ? ' (JSON)' : ''}</span>
         </label>
-        <JsonEditor
-          id="responseBody"
-          value={responseBody}
-          onChange={setResponseBody}
-          rows={8}
-          disabled={isLoading}
-          templateAware
-        />
+        {contentType === 'application/json' ? (
+          <JsonEditor
+            id="responseBody"
+            value={responseBody}
+            onChange={setResponseBody}
+            rows={8}
+            disabled={isLoading}
+            templateAware
+          />
+        ) : (
+          <textarea
+            id="responseBody"
+            value={responseBody}
+            onChange={(e) => setResponseBody(e.target.value)}
+            rows={8}
+            className="textarea textarea-bordered w-full font-mono text-sm"
+            disabled={isLoading}
+          />
+        )}
         <TemplateVariableRef />
       </div>
 

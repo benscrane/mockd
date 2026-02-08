@@ -393,6 +393,7 @@ router.post('/projects/:projectId/endpoints', async (c) => {
       headers: getInternalAuthHeaders(c.env, { 'Content-Type': 'application/json' }),
       body: JSON.stringify({
         path: body.path,
+        content_type: body.contentType ?? 'application/json',
         response_body: body.responseBody,
         status_code: body.statusCode ?? 200,
         delay_ms: body.delay ?? 0,
@@ -445,6 +446,7 @@ router.put('/projects/:projectId/endpoints/:id', async (c) => {
       method: 'PUT',
       headers: getInternalAuthHeaders(c.env, { 'Content-Type': 'application/json' }),
       body: JSON.stringify({
+        content_type: body.contentType,
         response_body: body.responseBody,
         status_code: body.statusCode,
         delay_ms: body.delay,

@@ -321,5 +321,31 @@ export function stripTemplatesForValidation(str: string): string {
   return result;
 }
 
+/**
+ * Process template variables in response header values.
+ *
+ * Takes a headers object and replaces {{variable}} placeholders
+ * in each header value with their resolved values.
+ */
+export function processHeaders(
+  headers: Record<string, string>,
+  context: TemplateContext
+): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const [key, value] of Object.entries(headers)) {
+    result[key] = processTemplate(value, context);
+  }
+  return result;
+}
+
+/** Common content types for mock API responses */
+export const COMMON_CONTENT_TYPES = [
+  'application/json',
+  'text/plain',
+  'text/html',
+  'application/xml',
+  'text/csv',
+] as const;
+
 /** List of supported built-in variable names (for UI display) */
 export const TEMPLATE_VARIABLES = Object.keys(BUILTIN_VARIABLES);
