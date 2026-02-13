@@ -22,7 +22,10 @@ export function CallToAction({ onQuickStart, isLoading }: CallToActionProps) {
             className="btn btn-primary btn-lg"
           >
             {isLoading ? (
-              <span className="loading loading-spinner loading-sm" />
+              <>
+                <span className="loading loading-spinner loading-sm" />
+                Creating your mock...
+              </>
             ) : (
               'Try It Now — Free'
             )}

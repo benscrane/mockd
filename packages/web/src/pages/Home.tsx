@@ -85,11 +85,38 @@ export function Home() {
   const handleQuickStart = async () => {
     setIsCreating(true);
     try {
-      const project = await createAnonymousProject();
+      // 1. Create anonymous project with a descriptive name
+      const project = await createAnonymousProject('Webhook Receiver');
       setAnonymousProjects(prev => [...prev, project]);
-      navigate(`/projects/${project.id}`);
+
+      // 2. Create a webhook endpoint with dynamic template variables
+      const endpointRes = await fetch(`${getApiBaseUrl()}/api/projects/${project.id}/endpoints`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          path: '/webhooks/incoming',
+          statusCode: 200,
+          responseBody: JSON.stringify({
+            received: true,
+            message: 'Webhook processed successfully',
+            id: '{{$uuid}}',
+            timestamp: '{{$timestamp}}',
+          }, null, 2),
+        }),
+      });
+
+      if (endpointRes.ok) {
+        const endpointJson = await endpointRes.json();
+        const endpoint = endpointJson.data;
+        // 3. Navigate directly to endpoint detail with demo flag
+        navigate(`/projects/${project.id}/endpoints/${endpoint.id}?demo=true`);
+      } else {
+        // Fallback: navigate to project page
+        navigate(`/projects/${project.id}`);
+      }
     } catch (err) {
-      console.error('Failed to create anonymous project:', err);
+      console.error('Failed to create project:', err);
     } finally {
       setIsCreating(false);
     }

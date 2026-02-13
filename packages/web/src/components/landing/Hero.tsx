@@ -43,7 +43,10 @@ export function Hero({ onQuickStart, isLoading }: HeroProps) {
                 className="btn btn-primary btn-lg"
               >
                 {isLoading ? (
-                  <span className="loading loading-spinner loading-sm" />
+                  <>
+                    <span className="loading loading-spinner loading-sm" />
+                    Creating your mock...
+                  </>
                 ) : (
                   <>
                     Start Mocking — Free
