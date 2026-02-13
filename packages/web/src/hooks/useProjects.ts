@@ -17,7 +17,7 @@ interface UseProjectsReturn {
   fetchAnonymousProjects: () => Promise<Project[]>;
   getProject: (projectId: string) => Promise<Project>;
   createProject: (data: CreateProjectRequest) => Promise<Project>;
-  createAnonymousProject: () => Promise<Project>;
+  createAnonymousProject: (name?: string) => Promise<Project>;
   updateProject: (projectId: string, data: { name?: string }) => Promise<Project>;
   deleteProject: (projectId: string) => Promise<void>;
   claimProject: (projectId: string, data?: { name?: string; subdomain?: string }) => Promise<Project>;

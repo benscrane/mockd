@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import type { Project, Endpoint, UpdateEndpointRequest } from '@mockd/shared';
 import { useProjects, useEndpoints, useWebSocket, useAnalytics } from '../hooks';
 import { RequestList } from '../components/request';
@@ -9,9 +9,20 @@ import { AnalyticsDashboard } from '../components/analytics';
 import { Breadcrumbs, CopyButton, ConfirmDialog } from '../components/common';
 import { getMockApiSubdomainUrl, getProjectDoName } from '../config';
 
+const DEMO_PAYLOAD = {
+  event: 'payment.completed',
+  data: {
+    id: 'pay_8x4k2m',
+    amount: 49.99,
+    currency: 'USD',
+    customer_email: 'jane@example.com',
+  },
+};
+
 export function EndpointDetail() {
   const { projectId, endpointId } = useParams<{ projectId: string; endpointId: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { getProject } = useProjects();
   const { endpoints, fetchEndpoints, updateEndpoint, deleteEndpoint } = useEndpoints();
 
@@ -24,6 +35,11 @@ export function EndpointDetail() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [isBodyExpanded, setIsBodyExpanded] = useState(false);
+
+  // Demo mode state
+  const isDemo = searchParams.get('demo') === 'true';
+  const [showDemoBanner, setShowDemoBanner] = useState(isDemo);
+  const demoFiredRef = useRef(false);
 
   // Get the DO name for WebSocket connection (subdomain for user-owned, id for anonymous)
   const doName = useMemo(() => project ? getProjectDoName(project) : undefined, [project]);
@@ -68,6 +84,34 @@ export function EndpointDetail() {
       setEndpoint(found || null);
     }
   }, [endpointId, endpoints]);
+
+  // Demo mode: auto-fire a demo request once WebSocket is connected
+  useEffect(() => {
+    if (!isDemo || demoFiredRef.current || status !== 'connected' || !endpoint || !project) {
+      return;
+    }
+
+    demoFiredRef.current = true;
+    const endpointDemoUrl = getMockApiSubdomainUrl(project.subdomain) + endpoint.path;
+
+    // Small delay to ensure the WebSocket subscription is active
+    const timer = setTimeout(() => {
+      fetch(endpointDemoUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(DEMO_PAYLOAD),
+      }).catch(() => {
+        // Silently ignore — demo request is best-effort
+      });
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [isDemo, status, endpoint, project]);
+
+  const dismissDemoBanner = () => {
+    setShowDemoBanner(false);
+    setSearchParams({});
+  };
 
   if (loading) {
     return (
@@ -159,6 +203,38 @@ export function EndpointDetail() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        {showDemoBanner && (
+          <div className="alert alert-success mb-6 shadow-sm">
+            <svg className="w-6 h-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm">Your mock endpoint is live!</p>
+              <p className="text-xs mt-0.5 opacity-80">
+                We sent a demo webhook request — you can see it in the Request Stream below. Try sending your own:
+              </p>
+              <code className="text-xs font-mono block mt-1.5 bg-success/20 px-2 py-1 rounded truncate">
+                curl -X POST {endpointUrl} -H "Content-Type: application/json" -d '{JSON.stringify({ event: "test" })}'
+              </code>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <CopyButton
+                text={`curl -X POST ${endpointUrl} -H "Content-Type: application/json" -d '${JSON.stringify(DEMO_PAYLOAD)}'`}
+                label="Copy"
+                className="btn-sm"
+              />
+              <button
+                onClick={dismissDemoBanner}
+                className="btn btn-ghost btn-sm btn-square"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
         {isEditing ? (
           <div className="card bg-base-100 shadow-sm mb-6 p-6">
             <h2 className="text-lg font-semibold mb-4">Edit Endpoint</h2>
