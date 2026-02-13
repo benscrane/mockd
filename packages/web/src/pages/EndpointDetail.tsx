@@ -4,7 +4,7 @@ import type { Project, Endpoint, UpdateEndpointRequest } from '@mockd/shared';
 import { useProjects, useEndpoints, useWebSocket, useAnalytics } from '../hooks';
 import { RequestList } from '../components/request';
 import { RulesPanel } from '../components/rules';
-import { EndpointForm, QuickTestPanel, ExportEndpointModal } from '../components/endpoint';
+import { EndpointForm, QuickTestPanel, ExportEndpointModal, UsageSnippets } from '../components/endpoint';
 import { AnalyticsDashboard } from '../components/analytics';
 import { Breadcrumbs, CopyButton, ConfirmDialog } from '../components/common';
 import { getMockApiSubdomainUrl, getProjectDoName } from '../config';
@@ -294,6 +294,8 @@ export function EndpointDetail() {
             </div>
           </div>
         )}
+
+        <UsageSnippets endpointUrl={endpointUrl} endpoint={endpoint} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
