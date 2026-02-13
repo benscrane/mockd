@@ -27,21 +27,21 @@ open a terminal, send a curl — 5+ steps before any "aha" moment.
 
 ---
 
-## 2. Persistent cURL Snippets per Endpoint
+## 2. Persistent cURL Snippets per Endpoint [IMPLEMENTED]
 
 **Problem:** After creating an endpoint, the only curl example appears in a dismissible
 "Getting Started" banner (only for template-created projects). Once dismissed, or for
 manually created endpoints, there's no easy usage reference.
 
-**Solution:** Add a persistent "Usage" collapsible section on every endpoint detail page with:
+**Solution:** Added a persistent "Usage" collapsible section on every endpoint detail page with:
 - Pre-built curl snippets for GET, POST, PUT, DELETE
 - Full endpoint URL with one-click copy
 - Language tabs (cURL, JavaScript fetch, Python requests)
 - Auto-populated with the endpoint's configured content type and sample body
 
-**Files to change:**
-- `packages/web/src/components/endpoint/UsageSnippets.tsx` (new component)
-- `packages/web/src/pages/EndpointDetail.tsx` — Add UsageSnippets below the endpoint URL card
+**Files changed:**
+- `packages/web/src/components/endpoint/UsageSnippets.tsx` — New component with method selector, language tabs, and generated code snippets
+- `packages/web/src/pages/EndpointDetail.tsx` — Integrated UsageSnippets below the endpoint URL card
 
 **Impact:** HIGH — Bridges "I created a mock" to "I'm actively using it."
 
